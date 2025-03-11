@@ -12,6 +12,41 @@
         <h1>Comparador de Hipotecas</h1>
         
         <form id="formulario-hipotecas">
+            <!-- Sección de datos generales -->
+            <div class="general-info-panel">
+                <h2>Información General</h2>
+                <div class="general-info-container">
+                    <div class="form-group">
+                        <label for="valor_inmueble">Valor del inmueble (€):</label>
+                        <input type="number" id="valor_inmueble" name="valor_inmueble" min="1" step="any" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ahorros">Ahorros disponibles (€):</label>
+                        <input type="number" id="ahorros" name="ahorros" min="0" step="any" required>
+                    </div>
+                </div>
+                
+                <h3>Gastos Fijos</h3>
+                <div class="gastos-fijos-container">
+                    <div class="form-group">
+                        <label for="notaria">Notaría y cambio titularidad (€):</label>
+                        <input type="number" id="notaria" name="notaria" value="1200" step="any" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="registro">Registro propiedad (€):</label>
+                        <input type="number" id="registro" name="registro" value="1000" step="any" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gestoria">Gestoría (€):</label>
+                        <input type="number" id="gestoria" name="gestoria" value="375" step="any" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tasacion">Tasación (€):</label>
+                        <input type="number" id="tasacion" name="tasacion" value="400" step="any" required>
+                    </div>
+                </div>
+            </div>
+            
             <div class="simulaciones-container">
                 <!-- Simulación 1 -->
                 <div class="simulacion-panel">
@@ -21,8 +56,12 @@
                         <input type="text" id="entidad1" name="entidad1" required>
                     </div>
                     <div class="form-group">
+                        <label for="entrada_porcentaje1">Porcentaje de entrada (%):</label>
+                        <input type="number" id="entrada_porcentaje1" name="entrada_porcentaje1" min="0" max="100" step="0.1" required>
+                    </div>
+                    <div class="form-group">
                         <label for="valor1">Valor a financiar (€):</label>
-                        <input type="number" id="valor1" name="valor1" min="1" step="any" required>
+                        <input type="number" id="valor1" name="valor1" min="1" step="any" readonly>
                     </div>
                     <div class="form-group">
                         <label for="anios1">Años de financiación:</label>
@@ -50,8 +89,12 @@
                         <input type="text" id="entidad2" name="entidad2" required>
                     </div>
                     <div class="form-group">
+                        <label for="entrada_porcentaje2">Porcentaje de entrada (%):</label>
+                        <input type="number" id="entrada_porcentaje2" name="entrada_porcentaje2" min="0" max="100" step="0.1" required>
+                    </div>
+                    <div class="form-group">
                         <label for="valor2">Valor a financiar (€):</label>
-                        <input type="number" id="valor2" name="valor2" min="1" step="any" required>
+                        <input type="number" id="valor2" name="valor2" min="1" step="any" readonly>
                     </div>
                     <div class="form-group">
                         <label for="anios2">Años de financiación:</label>

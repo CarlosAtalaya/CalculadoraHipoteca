@@ -52,9 +52,24 @@ def index():
 
 @app.route('/calcular', methods=['POST'])
 def calcular():
+    # Obtener datos generales
+    valor_inmueble = request.form.get('valor_inmueble', '')
+    ahorros = request.form.get('ahorros', '')
+    notaria = request.form.get('notaria', '')
+    registro = request.form.get('registro', '')
+    gestoria = request.form.get('gestoria', '')
+    tasacion = request.form.get('tasacion', '')
+    
+    # Calcular gastos fijos
+    try:
+        gastos_fijos = float(notaria) + float(registro) + float(gestoria) + float(tasacion)
+    except ValueError:
+        gastos_fijos = 0
+    
     # Obtener datos del formulario para ambas simulaciones
     # Simulación 1
     nombre_entidad1 = request.form.get('entidad1', '')
+    entrada_porcentaje1 = request.form.get('entrada_porcentaje1', '')
     valor1 = request.form.get('valor1', '')
     anios1 = request.form.get('anios1', '')
     interes1 = request.form.get('interes1', '')
@@ -62,6 +77,7 @@ def calcular():
     
     # Simulación 2
     nombre_entidad2 = request.form.get('entidad2', '')
+    entrada_porcentaje2 = request.form.get('entrada_porcentaje2', '')
     valor2 = request.form.get('valor2', '')
     anios2 = request.form.get('anios2', '')
     interes2 = request.form.get('interes2', '')
@@ -77,6 +93,7 @@ def calcular():
     if cuota1:
         resultados['simulacion1'] = {
             'entidad': nombre_entidad1,
+            'valor_financiar': float(valor1),
             'cuota': cuota1,
             'total': total1,
             'intereses': intereses1,
@@ -92,6 +109,7 @@ def calcular():
     if cuota2:
         resultados['simulacion2'] = {
             'entidad': nombre_entidad2,
+            'valor_financiar': float(valor2),
             'cuota': cuota2,
             'total': total2,
             'intereses': intereses2,

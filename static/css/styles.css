@@ -45,6 +45,44 @@ h2 {
     padding-bottom: 5px;
 }
 
+h3 {
+    color: var(--primary-color);
+    margin-top: 20px;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+/* Panel de información general */
+.general-info-panel {
+    background-color: white;
+    padding: 25px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 30px;
+}
+
+.general-info-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.general-info-container .form-group {
+    flex: 1;
+    min-width: 200px;
+}
+
+.gastos-fijos-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.gastos-fijos-container .form-group {
+    flex: 1;
+    min-width: 150px;
+}
+
 .simulaciones-container {
     display: flex;
     flex-wrap: wrap;
@@ -86,6 +124,11 @@ input[type="text"]:focus {
     border-color: var(--secondary-color);
     outline: none;
     box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+input[readonly] {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
 }
 
 .buttons-container {
@@ -195,5 +238,10 @@ button {
     
     .simulacion-panel {
         width: 100%;
+    }
+    
+    .general-info-container, 
+    .gastos-fijos-container {
+        flex-direction: column;
     }
 }
