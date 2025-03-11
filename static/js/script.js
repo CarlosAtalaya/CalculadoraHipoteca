@@ -197,20 +197,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // Mostrar resultados de simulación 1
             if (data.simulacion1) {
                 resultados1.innerHTML = `
-                    <p><strong>Entidad bancaria:</strong> ${data.simulacion1.entidad}</p>
-                    <p><strong>Valor inmueble:</strong> ${valorInmueble.toLocaleString('es-ES')} €</p>
-                    <p><strong>Entrada (${porcentajeEntrada1}%):</strong> ${entrada1.toLocaleString('es-ES')} €</p>
-                    <p><strong>ITP (${parseFloat(itpInput.value)}%):</strong> ${(valorInmueble * parseFloat(itpInput.value) / 100).toLocaleString('es-ES')} €</p>
-                    <p><strong>Otros gastos fijos:</strong> ${(gastosFijos - (valorInmueble * parseFloat(itpInput.value) / 100)).toLocaleString('es-ES')} €</p>
-                    <p><strong>Total gastos fijos:</strong> ${gastosFijos.toLocaleString('es-ES')} €</p>
-                    <p><strong>Desembolso inicial:</strong> ${(entrada1 + gastosFijos).toLocaleString('es-ES')} €</p>
-                    <p><strong>Ahorros restantes:</strong> ${ahorrosRestantes1.toLocaleString('es-ES')} €</p>
-                    <p><strong>Valor a financiar:</strong> ${data.simulacion1.valor_financiar.toLocaleString('es-ES')} €</p>
-                    <p><strong>Cuota mensual:</strong> ${data.simulacion1.cuota.toLocaleString('es-ES')} €</p>
-                    <p><strong>Total pagado en hipoteca:</strong> ${data.simulacion1.total.toLocaleString('es-ES')} €</p>
-                    <p><strong>Total pagado (hipoteca + entrada + gastos):</strong> ${(data.simulacion1.total + entrada1 + gastosFijos).toLocaleString('es-ES')} €</p>
-                    <p><strong>Total intereses:</strong> ${data.simulacion1.intereses.toLocaleString('es-ES')} €</p>
-                    <p><strong>Intereses hasta amortización:</strong> ${data.simulacion1.intereses_acumulados.toLocaleString('es-ES')} €</p>
+                    <div class="resultados-seccion">
+                        <h4>Datos de la hipoteca</h4>
+                        <p><strong>Entidad bancaria:</strong> ${data.simulacion1.entidad}</p>
+                        <p><strong>Valor inmueble:</strong> ${valorInmueble.toLocaleString('es-ES')} €</p>
+                        <p><strong>Entrada (${porcentajeEntrada1}%):</strong> ${entrada1.toLocaleString('es-ES')} €</p>
+                        <p><strong>Valor a financiar:</strong> ${data.simulacion1.valor_financiar.toLocaleString('es-ES')} €</p>
+                        <p><strong>Cuota mensual:</strong> ${data.simulacion1.cuota.toLocaleString('es-ES')} €</p>
+                        <p><strong>Total pagado en hipoteca:</strong> ${data.simulacion1.total.toLocaleString('es-ES')} €</p>
+                        <p><strong>Total pagado (hipoteca + entrada + gastos):</strong> ${(data.simulacion1.total + entrada1 + gastosFijos).toLocaleString('es-ES')} €</p>
+                        <p><strong>Total intereses:</strong> ${data.simulacion1.intereses.toLocaleString('es-ES')} €</p>
+                        <p><strong>Intereses hasta amortización:</strong> ${data.simulacion1.intereses_acumulados.toLocaleString('es-ES')} €</p>
+                    </div>
+
+                    <div class="resultados-seccion">
+                        <h4>Gastos y ahorros</h4>
+                        <p><strong>Entrada (${porcentajeEntrada1}%):</strong> ${entrada1.toLocaleString('es-ES')} €</p>
+                        <p><strong>ITP (${parseFloat(itpInput.value)}%):</strong> ${(valorInmueble * parseFloat(itpInput.value) / 100).toLocaleString('es-ES')} €</p>
+                        <p><strong>Otros gastos fijos:</strong> ${(gastosFijos - (valorInmueble * parseFloat(itpInput.value) / 100)).toLocaleString('es-ES')} €</p>
+                        <p><strong>Total gastos fijos:</strong> ${gastosFijos.toLocaleString('es-ES')} €</p>
+                        <p><strong>Desembolso inicial:</strong> <span class="gasto-destacado">${(entrada1 + gastosFijos).toLocaleString('es-ES')} €</span></p>
+                        <p><strong>Ahorros restantes:</strong> <span class="ahorro-destacado">${ahorrosRestantes1.toLocaleString('es-ES')} €</span></p>
+                    </div>
                 `;
                 resultados1.classList.remove('error');
             } else {
@@ -221,20 +229,28 @@ document.addEventListener('DOMContentLoaded', function() {
             // Mostrar resultados de simulación 2
             if (data.simulacion2) {
                 resultados2.innerHTML = `
-                    <p><strong>Entidad bancaria:</strong> ${data.simulacion2.entidad}</p>
-                    <p><strong>Valor inmueble:</strong> ${valorInmueble.toLocaleString('es-ES')} €</p>
-                    <p><strong>Entrada (${porcentajeEntrada2}%):</strong> ${entrada2.toLocaleString('es-ES')} €</p>
-                    <p><strong>ITP (${parseFloat(itpInput.value)}%):</strong> ${(valorInmueble * parseFloat(itpInput.value) / 100).toLocaleString('es-ES')} €</p>
-                    <p><strong>Otros gastos fijos:</strong> ${(gastosFijos - (valorInmueble * parseFloat(itpInput.value) / 100)).toLocaleString('es-ES')} €</p>
-                    <p><strong>Total gastos fijos:</strong> ${gastosFijos.toLocaleString('es-ES')} €</p>
-                    <p><strong>Desembolso inicial:</strong> ${(entrada2 + gastosFijos).toLocaleString('es-ES')} €</p>
-                    <p><strong>Ahorros restantes:</strong> ${ahorrosRestantes2.toLocaleString('es-ES')} €</p>
-                    <p><strong>Valor a financiar:</strong> ${data.simulacion2.valor_financiar.toLocaleString('es-ES')} €</p>
-                    <p><strong>Cuota mensual:</strong> ${data.simulacion2.cuota.toLocaleString('es-ES')} €</p>
-                    <p><strong>Total pagado en hipoteca:</strong> ${data.simulacion2.total.toLocaleString('es-ES')} €</p>
-                    <p><strong>Total pagado (hipoteca + entrada + gastos):</strong> ${(data.simulacion2.total + entrada2 + gastosFijos).toLocaleString('es-ES')} €</p>
-                    <p><strong>Total intereses:</strong> ${data.simulacion2.intereses.toLocaleString('es-ES')} €</p>
-                    <p><strong>Intereses hasta amortización:</strong> ${data.simulacion2.intereses_acumulados.toLocaleString('es-ES')} €</p>
+                    <div class="resultados-seccion">
+                        <h4>Datos de la hipoteca</h4>
+                        <p><strong>Entidad bancaria:</strong> ${data.simulacion2.entidad}</p>
+                        <p><strong>Valor inmueble:</strong> ${valorInmueble.toLocaleString('es-ES')} €</p>
+                        <p><strong>Entrada (${porcentajeEntrada2}%):</strong> ${entrada2.toLocaleString('es-ES')} €</p>
+                        <p><strong>Valor a financiar:</strong> ${data.simulacion2.valor_financiar.toLocaleString('es-ES')} €</p>
+                        <p><strong>Cuota mensual:</strong> ${data.simulacion2.cuota.toLocaleString('es-ES')} €</p>
+                        <p><strong>Total pagado en hipoteca:</strong> ${data.simulacion2.total.toLocaleString('es-ES')} €</p>
+                        <p><strong>Total pagado (hipoteca + entrada + gastos):</strong> ${(data.simulacion2.total + entrada2 + gastosFijos).toLocaleString('es-ES')} €</p>
+                        <p><strong>Total intereses:</strong> ${data.simulacion2.intereses.toLocaleString('es-ES')} €</p>
+                        <p><strong>Intereses hasta amortización:</strong> ${data.simulacion2.intereses_acumulados.toLocaleString('es-ES')} €</p>
+                    </div>
+
+                    <div class="resultados-seccion">
+                        <h4>Gastos y ahorros</h4>
+                        <p><strong>Entrada (${porcentajeEntrada2}%):</strong> ${entrada2.toLocaleString('es-ES')} €</p>
+                        <p><strong>ITP (${parseFloat(itpInput.value)}%):</strong> ${(valorInmueble * parseFloat(itpInput.value) / 100).toLocaleString('es-ES')} €</p>
+                        <p><strong>Otros gastos fijos:</strong> ${(gastosFijos - (valorInmueble * parseFloat(itpInput.value) / 100)).toLocaleString('es-ES')} €</p>
+                        <p><strong>Total gastos fijos:</strong> ${gastosFijos.toLocaleString('es-ES')} €</p>
+                        <p><strong>Desembolso inicial:</strong> <span class="gasto-destacado">${(entrada2 + gastosFijos).toLocaleString('es-ES')} €</span></p>
+                        <p><strong>Ahorros restantes:</strong> <span class="ahorro-destacado">${ahorrosRestantes2.toLocaleString('es-ES')} €</span></p>
+                    </div>
                 `;
                 resultados2.classList.remove('error');
             } else {
@@ -273,6 +289,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 htmlComparacion += crearFilaComparacion(
                     'Diferencia en total intereses',
                     data.diferencias.intereses,
+                    entidad1,
+                    entidad2
+                );
+                
+                // Comparativa de intereses hasta amortización
+                const interesesAmort1 = data.simulacion1.intereses_acumulados;
+                const interesesAmort2 = data.simulacion2.intereses_acumulados;
+                const difInteresesAmort = interesesAmort1 - interesesAmort2;
+
+                htmlComparacion += crearFilaComparacion(
+                    'Diferencia en intereses hasta amortización',
+                    difInteresesAmort,
                     entidad1,
                     entidad2
                 );

@@ -177,11 +177,12 @@ button {
 .resultados p {
     margin-bottom: 8px;
     font-size: 1rem;
+    padding: 4px 0;
+    border-bottom: 1px dotted #eee;
 }
 
-.resultados p strong {
-    font-weight: bold;
-    color: var(--primary-color);
+.resultados p:last-child {
+    border-bottom: none;
 }
 
 .resultados.error {
@@ -228,6 +229,31 @@ button {
 
 .hidden {
     display: none;
+}
+
+/* Estilos para los subapartados en resultados */
+.resultados-seccion {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.resultados-seccion h4 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+/* Estilos para destacar campos específicos */
+.ahorro-destacado {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.gasto-destacado {
+    color: var(--danger-color);
+    font-weight: bold;
 }
 
 /* Responsive */
