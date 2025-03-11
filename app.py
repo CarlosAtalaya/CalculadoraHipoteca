@@ -55,6 +55,7 @@ def calcular():
     # Obtener datos generales
     valor_inmueble = request.form.get('valor_inmueble', '')
     ahorros = request.form.get('ahorros', '')
+    itp_porcentaje = request.form.get('itp', '')
     notaria = request.form.get('notaria', '')
     registro = request.form.get('registro', '')
     gestoria = request.form.get('gestoria', '')
@@ -62,7 +63,9 @@ def calcular():
     
     # Calcular gastos fijos
     try:
-        gastos_fijos = float(notaria) + float(registro) + float(gestoria) + float(tasacion)
+        valor_inmueble_float = float(valor_inmueble)
+        itp_valor = valor_inmueble_float * (float(itp_porcentaje) / 100)
+        gastos_fijos = itp_valor + float(notaria) + float(registro) + float(gestoria) + float(tasacion)
     except ValueError:
         gastos_fijos = 0
     
