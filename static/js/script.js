@@ -5,7 +5,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultados2 = document.getElementById('resultados2');
     const comparacionResultados = document.getElementById('comparacion-resultados');
     
-    // Elementos para cálculos de valores a financiar
+        // Función para crear filas de comparación mejoradas
+    function crearFilaComparacionMejorada(etiqueta, valor1, valor2, entidad1, entidad2) {
+        const valor1Formateado = parseFloat(valor1).toLocaleString('es-ES');
+        const valor2Formateado = parseFloat(valor2).toLocaleString('es-ES');
+        const diferencia = Math.abs(valor1 - valor2).toLocaleString('es-ES');
+        const mejorEntidad = valor1 < valor2 ? entidad1 : entidad2;
+        
+        return `
+            <div class="comparacion-item">
+                <div class="comparacion-label">${etiqueta}:</div>
+                <div class="comparacion-valores">
+                    <div class="comparacion-valor-entidad entidad1-valor ${valor1 < valor2 ? 'mejor-valor' : ''}">
+                        ${valor1Formateado} €
+                    </div>
+                    <div class="comparacion-diferencia">
+                        Diferencia: ${diferencia} € 
+                        <span class="mejor-opcion">(Mejor: ${mejorEntidad})</span>
+                    </div>
+                    <div class="comparacion-valor-entidad entidad2-valor ${valor2 < valor1 ? 'mejor-valor' : ''}">
+                        ${valor2Formateado} €
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Función original para crear filas de comparación (mantener por compatibilidad)
+    function crearFilaComparacion(etiqueta, valor, entidad1, entidad2) {
+        const esPositivo = valor > 0;
+        const claseCSS = esPositivo ? 'diferencia-positiva' : 'diferencia-negativa';
+        const mejorEntidad = esPositivo ? entidad2 : entidad1;
+        const valorAbsoluto = Math.abs(valor).toLocaleString('es-ES');
+        const icono = esPositivo ? '↓' : '↑';
+        
+        return `
+            <div class="comparacion-item">
+                <div class="comparacion-label">${etiqueta}:</div>
+                <div class="comparacion-valor ${claseCSS}">
+                    ${valorAbsoluto} € ${icono} (Mejor: ${mejorEntidad})
+                </div>
+            </div>
+        `;
+    }
     const valorInmuebleInput = document.getElementById('valor_inmueble');
     const ahorrosInput = document.getElementById('ahorros');
     const itpInput = document.getElementById('itp');
@@ -263,69 +305,64 @@ document.addEventListener('DOMContentLoaded', function() {
                 const entidad1 = data.simulacion1.entidad;
                 const entidad2 = data.simulacion2.entidad;
                 
-                let htmlComparacion = '<h2>Comparativa entre entidades</h2>';
+                let htmlComparacion = `
+                    <h2>Comparativa entre entidades</h2>
+                    <div class="comparacion-header">
+                        <div class="comparacion-entidad entidad1">${entidad1}</div>
+                        <div class="comparacion-vs">VS</div>
+                        <div class="comparacion-entidad entidad2">${entidad2}</div>
+                    </div>
+                `;
                 
                 // Desembolso inicial
                 const desembolso1 = entrada1 + gastosFijos;
                 const desembolso2 = entrada2 + gastosFijos;
                 const difDesembolso = desembolso1 - desembolso2;
                 
-                htmlComparacion += crearFilaComparacion(
-                    'Diferencia en desembolso inicial',
-                    difDesembolso,
+                htmlComparacion += crearFilaComparacionMejorada(
+                    'Desembolso inicial',
+                    desembolso1,
+                    desembolso2,
                     entidad1,
                     entidad2
                 );
                 
                 // Cuota mensual
-                htmlComparacion += crearFilaComparacion(
-                    'Diferencia en cuota mensual',
-                    data.diferencias.cuota,
+                htmlComparacion += crearFilaComparacionMejorada(
+                    'Cuota mensual',
+                    data.simulacion1.cuota,
+                    data.simulacion2.cuota,
                     entidad1,
                     entidad2
                 );
                 
                 // Total intereses
-                htmlComparacion += crearFilaComparacion(
-                    'Diferencia en total intereses',
-                    data.diferencias.intereses,
+                htmlComparacion += crearFilaComparacionMejorada(
+                    'Total intereses',
+                    data.simulacion1.intereses,
+                    data.simulacion2.intereses,
                     entidad1,
                     entidad2
                 );
                 
                 // Comparativa de intereses hasta amortización
-                const interesesAmort1 = data.simulacion1.intereses_acumulados;
-                const interesesAmort2 = data.simulacion2.intereses_acumulados;
-                const difInteresesAmort = interesesAmort1 - interesesAmort2;
-
-                htmlComparacion += crearFilaComparacion(
-                    'Diferencia en intereses hasta amortización',
-                    difInteresesAmort,
+                htmlComparacion += crearFilaComparacionMejorada(
+                    'Intereses hasta amortización',
+                    data.simulacion1.intereses_acumulados,
+                    data.simulacion2.intereses_acumulados,
                     entidad1,
                     entidad2
                 );
                 
-                // Calcular coste total (entrada + gastos + hipoteca)
-                const costeTotalGlobal1 = desembolso1 + data.simulacion1.total;
-                const costeTotalGlobal2 = desembolso2 + data.simulacion2.total;
-                const difCosteTotalGlobal = costeTotalGlobal1 - costeTotalGlobal2;
-                
-                htmlComparacion += crearFilaComparacion(
-                    'Diferencia en coste total global',
-                    difCosteTotalGlobal,
-                    entidad1,
-                    entidad2
-                );
-                
-                // Añadir recomendación basada en coste total global
-                const mejorOpcion = difCosteTotalGlobal < 0 ? entidad1 : entidad2;
-                const ahorro = Math.abs(difCosteTotalGlobal).toLocaleString('es-ES');
+                // Añadir recomendación basada en intereses totales
+                const mejorOpcion = data.simulacion1.intereses < data.simulacion2.intereses ? entidad1 : entidad2;
+                const ahorro = Math.abs(data.diferencias.intereses).toLocaleString('es-ES');
                 
                 htmlComparacion += `
-                    <div class="comparacion-item">
-                        <div class="comparacion-label">Recomendación:</div>
+                    <div class="comparacion-item comparacion-recomendacion">
+                        <div class="comparacion-label">Recomendación (por intereses):</div>
                         <div class="comparacion-valor">
-                            <strong>${mejorOpcion}</strong> - Ahorro total de <strong>${ahorro} €</strong>
+                            <strong>${mejorOpcion}</strong> - Ahorro en intereses de <strong>${ahorro} €</strong>
                         </div>
                     </div>
                 `;

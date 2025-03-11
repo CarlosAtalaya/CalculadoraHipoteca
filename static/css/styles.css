@@ -256,6 +256,83 @@ button {
     font-weight: bold;
 }
 
+/* Estilos para la comparativa mejorada */
+.comparacion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--secondary-color);
+}
+
+.comparacion-entidad {
+    font-weight: bold;
+    font-size: 1.2rem;
+    padding: 8px 15px;
+    border-radius: var(--border-radius);
+    color: var(--dark-text);
+}
+
+.comparacion-vs {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.entidad1 {
+    background-color: rgba(52, 152, 219, 0.2); /* Azul claro para entidad 1 */
+}
+
+.entidad2 {
+    background-color: rgba(155, 89, 182, 0.2); /* Púrpura claro para entidad 2 */
+}
+
+.comparacion-valores {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 70%;
+}
+
+.comparacion-valor-entidad {
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    min-width: 25%;
+    text-align: center;
+}
+
+.entidad1-valor {
+    background-color: rgba(52, 152, 219, 0.2); /* Azul claro para entidad 1 */
+}
+
+.entidad2-valor {
+    background-color: rgba(155, 89, 182, 0.2); /* Púrpura claro para entidad 2 */
+}
+
+.mejor-valor {
+    border: 2px solid var(--success-color);
+}
+
+.comparacion-diferencia {
+    flex-grow: 1;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+.mejor-opcion {
+    color: var(--success-color);
+    font-weight: bold;
+}
+
+.comparacion-recomendacion {
+    margin-top: 20px;
+    background-color: rgba(46, 204, 113, 0.1);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--success-color);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .simulaciones-container {
@@ -269,5 +346,19 @@ button {
     .general-info-container, 
     .gastos-fijos-container {
         flex-direction: column;
+    }
+    
+    .comparacion-valores {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .comparacion-valor-entidad {
+        width: 100%;
+    }
+    
+    .comparacion-diferencia {
+        margin: 10px 0;
     }
 }
