@@ -1,3 +1,5 @@
+/* Estilos CSS actualizados para grid dinámico */
+
 :root {
     --primary-color: #2c3e50;
     --secondary-color: #3498db;
@@ -25,7 +27,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px; /* Aumentado para acomodar 4 columnas si es necesario */
     margin: 0 auto;
     padding: 20px;
 }
@@ -45,14 +47,13 @@ h2 {
     padding-bottom: 5px;
 }
 
-h3 {
+h4 {
+    margin-top: 10px;
+    margin-bottom: 5px;
     color: var(--primary-color);
-    margin-top: 20px;
-    margin-bottom: 15px;
-    font-size: 1.3rem;
+    font-size: 1.1em;
 }
 
-/* Panel de información general */
 .general-info-panel {
     background-color: white;
     padding: 25px;
@@ -61,45 +62,15 @@ h3 {
     margin-bottom: 30px;
 }
 
-.general-info-container {
+.general-info-container, .gastos-fijos-container {
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
-}
-
-.general-info-container .form-group {
-    flex: 1;
-    min-width: 200px;
-}
-
-.gastos-fijos-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.gastos-fijos-container .form-group {
-    flex: 1;
-    min-width: 150px;
-}
-
-.simulaciones-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 30px;
-    margin-bottom: 30px;
-}
-
-.simulacion-panel {
-    flex: 1;
-    min-width: 300px;
-    background-color: white;
-    padding: 25px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
 }
 
 .form-group {
+    flex: 1;
+    min-width: 150px;
     margin-bottom: 15px;
 }
 
@@ -110,8 +81,7 @@ label {
     color: var(--primary-color);
 }
 
-input[type="text"],
-input[type="number"] {
+input[type="text"], input[type="number"], select {
     width: 100%;
     padding: 10px;
     border: 1px solid #ddd;
@@ -119,23 +89,46 @@ input[type="number"] {
     font-size: 1rem;
 }
 
-input[type="number"]:focus,
-input[type="text"]:focus {
-    border-color: var(--secondary-color);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+/* Simulaciones Grid System */
+.simulaciones-container {
+    display: grid;
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
-input[readonly] {
-    background-color: #f5f5f5;
-    cursor: not-allowed;
+.simulaciones-container.grid-1 { grid-template-columns: 1fr; max-width: 600px; margin-left: auto; margin-right: auto; }
+.simulaciones-container.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.simulaciones-container.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.simulaciones-container.grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Responsive adjustments for grid */
+@media (max-width: 1200px) {
+    .simulaciones-container.grid-4 { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 900px) {
+    .simulaciones-container.grid-3 { grid-template-columns: 1fr; }
+    .simulaciones-container.grid-2 { grid-template-columns: 1fr; }
+    .simulaciones-container.grid-4 { grid-template-columns: 1fr; }
+}
+
+.simulacion-panel {
+    background-color: white;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    border-top: 5px solid var(--secondary-color);
+}
+
+.hidden {
+    display: none !important;
 }
 
 .buttons-container {
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-bottom: 30px;
+    margin: 30px 0;
+    flex-wrap: wrap;
 }
 
 button {
@@ -144,221 +137,88 @@ button {
     border-radius: var(--border-radius);
     cursor: pointer;
     font-weight: bold;
-    transition: all 0.3s ease;
+    color: white;
     font-size: 1rem;
+    transition: background 0.3s;
 }
 
-#btn-calcular {
-    background-color: var(--secondary-color);
-    color: var(--light-text);
-}
+#btn-calcular { background-color: var(--secondary-color); }
+#btn-calcular:hover { background-color: #2980b9; }
 
-#btn-calcular:hover {
-    background-color: #2980b9;
-}
+#btn-limpiar { background-color: #95a5a6; }
+#btn-limpiar:hover { background-color: #7f8c8d; }
 
-#btn-limpiar {
-    background-color: #95a5a6;
-    color: var(--light-text);
-}
+#btn-pdf { background-color: var(--primary-color); }
+#btn-pdf:hover { background-color: #34495e; }
 
-#btn-limpiar:hover {
-    background-color: #7f8c8d;
-}
-
+/* Resultados */
 .resultados {
-    margin-top: 20px;
+    margin-top: 15px;
     padding: 15px;
-    background-color: #edf2f7;
-    border-radius: var(--border-radius);
-    border-left: 4px solid var(--secondary-color);
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.95rem;
 }
 
-.resultados p {
-    margin-bottom: 8px;
-    font-size: 1rem;
-    padding: 4px 0;
-    border-bottom: 1px dotted #eee;
+.resultados-seccion {
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
 }
+.resultados-seccion:last-child { border-bottom: none; }
 
-.resultados p:last-child {
-    border-bottom: none;
-}
+.gasto-destacado { color: var(--danger-color); font-weight: bold; }
+.ahorro-destacado { color: var(--success-color); font-weight: bold; }
 
-.resultados.error {
-    border-left-color: var(--danger-color);
-    background-color: #fdeaea;
-}
-
+/* Tabla de Comparación */
 .comparacion-container {
     background-color: white;
     padding: 25px;
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
-    margin-top: 30px;
+    overflow-x: auto;
 }
 
-.comparacion-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed #ddd;
-}
-
-.comparacion-item:last-child {
-    border-bottom: none;
-}
-
-.comparacion-label {
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.comparacion-valor {
-    font-weight: bold;
-}
-
-.diferencia-positiva {
-    color: var(--success-color);
-}
-
-.diferencia-negativa {
-    color: var(--danger-color);
-}
-
-.hidden {
-    display: none;
-}
-
-/* Estilos para los subapartados en resultados */
-.resultados-seccion {
+.comparacion-table {
+    width: 100%;
+    border-collapse: collapse;
     margin-top: 15px;
-    padding-top: 10px;
-    border-top: 1px solid #ddd;
 }
 
-.resultados-seccion h4 {
-    color: var(--primary-color);
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-    font-weight: bold;
-}
-
-/* Estilos para destacar campos específicos */
-.ahorro-destacado {
-    color: var(--success-color);
-    font-weight: bold;
-}
-
-.gasto-destacado {
-    color: var(--danger-color);
-    font-weight: bold;
-}
-
-/* Estilos para la comparativa mejorada */
-.comparacion-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--secondary-color);
-}
-
-.comparacion-entidad {
-    font-weight: bold;
-    font-size: 1.2rem;
-    padding: 8px 15px;
-    border-radius: var(--border-radius);
-    color: var(--dark-text);
-}
-
-.comparacion-vs {
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-.entidad1 {
-    background-color: rgba(52, 152, 219, 0.2); /* Azul claro para entidad 1 */
-}
-
-.entidad2 {
-    background-color: rgba(155, 89, 182, 0.2); /* Púrpura claro para entidad 2 */
-}
-
-.comparacion-valores {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 70%;
-}
-
-.comparacion-valor-entidad {
-    padding: 5px 10px;
-    border-radius: var(--border-radius);
-    font-weight: bold;
-    min-width: 25%;
+.comparacion-table th, .comparacion-table td {
+    padding: 12px;
+    border: 1px solid #ddd;
     text-align: center;
 }
 
-.entidad1-valor {
-    background-color: rgba(52, 152, 219, 0.2); /* Azul claro para entidad 1 */
+.comparacion-table th {
+    background-color: var(--primary-color);
+    color: white;
 }
 
-.entidad2-valor {
-    background-color: rgba(155, 89, 182, 0.2); /* Púrpura claro para entidad 2 */
-}
-
-.mejor-valor {
-    border: 2px solid var(--success-color);
-}
-
-.comparacion-diferencia {
-    flex-grow: 1;
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-.mejor-opcion {
-    color: var(--success-color);
+.concepto-col {
+    text-align: left !important;
     font-weight: bold;
+    background-color: #f2f2f2;
+    width: 25%;
+}
+
+.mejor-valor-cell {
+    background-color: rgba(46, 204, 113, 0.15);
+    font-weight: bold;
+    color: #27ae60;
+    position: relative;
+}
+
+.best-icon {
+    margin-left: 5px;
+    color: var(--success-color);
 }
 
 .comparacion-recomendacion {
     margin-top: 20px;
-    background-color: rgba(46, 204, 113, 0.1);
+    background-color: #e8f8f5;
     padding: 15px;
-    border-radius: var(--border-radius);
-    border-left: 4px solid var(--success-color);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .simulaciones-container {
-        flex-direction: column;
-    }
-    
-    .simulacion-panel {
-        width: 100%;
-    }
-    
-    .general-info-container, 
-    .gastos-fijos-container {
-        flex-direction: column;
-    }
-    
-    .comparacion-valores {
-        flex-direction: column;
-        width: 100%;
-        gap: 10px;
-    }
-    
-    .comparacion-valor-entidad {
-        width: 100%;
-    }
-    
-    .comparacion-diferencia {
-        margin: 10px 0;
-    }
+    border-left: 5px solid var(--success-color);
+    border-radius: 4px;
 }

@@ -15,6 +15,17 @@
             <!-- Sección de datos generales -->
             <div class="general-info-panel">
                 <h2>Información General</h2>
+                
+                <div class="form-group" style="margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                    <label for="num_simulaciones" style="font-size: 1.1rem;">¿Cuántas ofertas quieres comparar?</label>
+                    <select id="num_simulaciones" name="num_simulaciones" style="width: auto; padding: 8px 15px;">
+                        <option value="1">1 (Solo simulación)</option>
+                        <option value="2" selected>2 ofertas</option>
+                        <option value="3">3 ofertas</option>
+                        <option value="4">4 ofertas</option>
+                    </select>
+                </div>
+
                 <div class="general-info-container">
                     <div class="form-group">
                         <label for="valor_inmueble">Valor del inmueble (€):</label>
@@ -30,30 +41,30 @@
                 <div class="gastos-fijos-container">
                     <div class="form-group">
                         <label for="itp">ITP (%):</label>
-                        <input type="number" id="itp" name="itp" value="5" min="0" max="15" step="0.1" required>
+                        <input type="number" id="itp" name="itp" value="3" min="0" max="15" step="0.1" required>
                     </div>
                     <div class="form-group">
                         <label for="notaria">Notaría y cambio titularidad (€):</label>
-                        <input type="number" id="notaria" name="notaria" value="1200" step="any" required>
+                        <input type="number" id="notaria" name="notaria" value="1100" step="any" required>
                     </div>
                     <div class="form-group">
                         <label for="registro">Registro propiedad (€):</label>
-                        <input type="number" id="registro" name="registro" value="1000" step="any" required>
+                        <input type="number" id="registro" name="registro" value="850" step="any" required>
                     </div>
                     <div class="form-group">
                         <label for="gestoria">Gestoría (€):</label>
-                        <input type="number" id="gestoria" name="gestoria" value="375" step="any" required>
+                        <input type="number" id="gestoria" name="gestoria" value="350" step="any" required>
                     </div>
                     <div class="form-group">
                         <label for="tasacion">Tasación (€):</label>
-                        <input type="number" id="tasacion" name="tasacion" value="400" step="any" required>
+                        <input type="number" id="tasacion" name="tasacion" value="300" step="any" required>
                     </div>
                 </div>
             </div>
             
             <div class="simulaciones-container">
                 <!-- Simulación 1 -->
-                <div class="simulacion-panel">
+                <div class="simulacion-panel" id="panel-sim1">
                     <h2>Simulación 1</h2>
                     <div class="form-group">
                         <label for="entidad1">Entidad bancaria:</label>
@@ -86,7 +97,7 @@
                 </div>
                 
                 <!-- Simulación 2 -->
-                <div class="simulacion-panel">
+                <div class="simulacion-panel" id="panel-sim2">
                     <h2>Simulación 2</h2>
                     <div class="form-group">
                         <label for="entidad2">Entidad bancaria:</label>
@@ -117,10 +128,73 @@
                         <!-- Resultados se mostrarán aquí -->
                     </div>
                 </div>
+
+                <!-- Simulación 3 (Oculta por defecto) -->
+                <div class="simulacion-panel hidden" id="panel-sim3">
+                    <h2>Simulación 3</h2>
+                    <div class="form-group">
+                        <label for="entidad3">Entidad bancaria:</label>
+                        <input type="text" id="entidad3" name="entidad3">
+                    </div>
+                    <div class="form-group">
+                        <label for="entrada_porcentaje3">Porcentaje de entrada (%):</label>
+                        <input type="number" id="entrada_porcentaje3" name="entrada_porcentaje3" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="valor3">Valor a financiar (€):</label>
+                        <input type="number" id="valor3" name="valor3" min="1" step="any" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="anios3">Años de financiación:</label>
+                        <input type="number" id="anios3" name="anios3" min="1" max="50" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="interes3">TAE (%):</label>
+                        <input type="number" id="interes3" name="interes3" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="anio_amortizacion3">Año de amortización:</label>
+                        <input type="number" id="anio_amortizacion3" name="anio_amortizacion3" min="1" step="any">
+                    </div>
+                    
+                    <div class="resultados" id="resultados3"></div>
+                </div>
+
+                <!-- Simulación 4 (Oculta por defecto) -->
+                <div class="simulacion-panel hidden" id="panel-sim4">
+                    <h2>Simulación 4</h2>
+                    <div class="form-group">
+                        <label for="entidad4">Entidad bancaria:</label>
+                        <input type="text" id="entidad4" name="entidad4">
+                    </div>
+                    <div class="form-group">
+                        <label for="entrada_porcentaje4">Porcentaje de entrada (%):</label>
+                        <input type="number" id="entrada_porcentaje4" name="entrada_porcentaje4" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label for="valor4">Valor a financiar (€):</label>
+                        <input type="number" id="valor4" name="valor4" min="1" step="any" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="anios4">Años de financiación:</label>
+                        <input type="number" id="anios4" name="anios4" min="1" max="50" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label for="interes4">TAE (%):</label>
+                        <input type="number" id="interes4" name="interes4" min="0" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="anio_amortizacion4">Año de amortización:</label>
+                        <input type="number" id="anio_amortizacion4" name="anio_amortizacion4" min="1" step="any">
+                    </div>
+                    
+                    <div class="resultados" id="resultados4"></div>
+                </div>
             </div>
             
             <div class="buttons-container">
                 <button type="submit" id="btn-calcular">Calcular Comparación</button>
+                <button type="button" id="btn-pdf" class="btn-secondary">Descargar Informe PDF</button>
                 <button type="button" id="btn-limpiar">Limpiar</button>
             </div>
         </form>

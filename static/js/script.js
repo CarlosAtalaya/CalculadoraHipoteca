@@ -1,373 +1,256 @@
 document.addEventListener('DOMContentLoaded', function() {
     const formulario = document.getElementById('formulario-hipotecas');
     const btnLimpiar = document.getElementById('btn-limpiar');
-    const resultados1 = document.getElementById('resultados1');
-    const resultados2 = document.getElementById('resultados2');
+    const btnPdf = document.getElementById('btn-pdf');
     const comparacionResultados = document.getElementById('comparacion-resultados');
+    const numSimulacionesSelect = document.getElementById('num_simulaciones');
     
-        // Función para crear filas de comparación mejoradas
-    function crearFilaComparacionMejorada(etiqueta, valor1, valor2, entidad1, entidad2) {
-        const valor1Formateado = parseFloat(valor1).toLocaleString('es-ES');
-        const valor2Formateado = parseFloat(valor2).toLocaleString('es-ES');
-        const diferencia = Math.abs(valor1 - valor2).toLocaleString('es-ES');
-        const mejorEntidad = valor1 < valor2 ? entidad1 : entidad2;
+    // Configuración inicial
+    const MAX_SIMULACIONES = 4;
+    let numSimulaciones = 2; // Valor por defecto
+
+    // Función para gestionar la visibilidad de los paneles
+    function actualizarVisibilidadPaneles() {
+        numSimulaciones = parseInt(numSimulacionesSelect.value);
         
-        return `
-            <div class="comparacion-item">
-                <div class="comparacion-label">${etiqueta}:</div>
-                <div class="comparacion-valores">
-                    <div class="comparacion-valor-entidad entidad1-valor ${valor1 < valor2 ? 'mejor-valor' : ''}">
-                        ${valor1Formateado} €
-                    </div>
-                    <div class="comparacion-diferencia">
-                        Diferencia: ${diferencia} € 
-                        <span class="mejor-opcion">(Mejor: ${mejorEntidad})</span>
-                    </div>
-                    <div class="comparacion-valor-entidad entidad2-valor ${valor2 < valor1 ? 'mejor-valor' : ''}">
-                        ${valor2Formateado} €
-                    </div>
-                </div>
-            </div>
-        `;
+        for (let i = 1; i <= MAX_SIMULACIONES; i++) {
+            const panel = document.getElementById(`panel-sim${i}`);
+            const inputs = panel.querySelectorAll('input, select');
+            
+            if (i <= numSimulaciones) {
+                panel.classList.remove('hidden');
+                // Activar campos requeridos
+                inputs.forEach(input => {
+                    if (input.dataset.wasRequired) {
+                        input.required = true;
+                    } else if (input.id.includes('valor')) {
+                        // valorN es readonly, no requiere required
+                    } else {
+                        // Por defecto, asumimos que los inputs principales son requeridos si el panel es visible
+                        // excepto si explicitamente sabemos que no (lógica simplificada)
+                        input.required = true;
+                    }
+                });
+            } else {
+                panel.classList.add('hidden');
+                // Desactivar campos requeridos para que no bloqueen el envío
+                inputs.forEach(input => {
+                    if (input.required) {
+                        input.dataset.wasRequired = "true"; // Guardar estado
+                        input.required = false;
+                    }
+                });
+                // Limpiar valores de paneles ocultos para no enviar basura
+                inputs.forEach(input => input.value = '');
+                document.getElementById(`resultados${i}`).innerHTML = '';
+            }
+        }
+        
+        // Actualizar grid layout
+        const container = document.querySelector('.simulaciones-container');
+        container.className = 'simulaciones-container'; // Reset classes
+        if (numSimulaciones === 1) container.classList.add('grid-1');
+        else if (numSimulaciones === 2) container.classList.add('grid-2');
+        else if (numSimulaciones === 3) container.classList.add('grid-3');
+        else container.classList.add('grid-4');
+        
+        // Ocultar comparación si cambiamos el número
+        comparacionResultados.innerHTML = '';
+        comparacionResultados.classList.add('hidden');
+    }
+
+    // Listener para el selector de número de simulaciones
+    if (numSimulacionesSelect) {
+        numSimulacionesSelect.addEventListener('change', actualizarVisibilidadPaneles);
+        // Inicializar
+        actualizarVisibilidadPaneles();
     }
     
-    // Función original para crear filas de comparación (mantener por compatibilidad)
-    function crearFilaComparacion(etiqueta, valor, entidad1, entidad2) {
-        const esPositivo = valor > 0;
-        const claseCSS = esPositivo ? 'diferencia-positiva' : 'diferencia-negativa';
-        const mejorEntidad = esPositivo ? entidad2 : entidad1;
-        const valorAbsoluto = Math.abs(valor).toLocaleString('es-ES');
-        const icono = esPositivo ? '↓' : '↑';
+    // Función para crear tabla de comparación dinámica
+    function crearTablaComparacion(simulaciones, recomendacion) {
+        if (!simulaciones || simulaciones.length < 2) return '';
+
+        let html = `
+            <h2>Comparativa entre entidades</h2>
+            <div class="comparacion-table-container">
+                <table class="comparacion-table">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            ${simulaciones.map((sim, index) => 
+                                `<th class="entidad-header entidad-${index+1}">${sim.entidad}</th>`
+                            ).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
         
-        return `
-            <div class="comparacion-item">
-                <div class="comparacion-label">${etiqueta}:</div>
-                <div class="comparacion-valor ${claseCSS}">
-                    ${valorAbsoluto} € ${icono} (Mejor: ${mejorEntidad})
-                </div>
+        const filas = [
+            { label: 'Desembolso Inicial', key: 'desembolso_inicial', isCurrency: true },
+            { label: 'Cuota Mensual', key: 'cuota', isCurrency: true },
+            { label: 'Total Intereses', key: 'intereses', isCurrency: true },
+            { label: 'Intereses hasta amort.', key: 'intereses_acumulados', isCurrency: true },
+            { label: 'Total Pagado', key: 'total', isCurrency: true }
+        ];
+
+        filas.forEach(fila => {
+            // Encontrar mejor valor (mínimo)
+            const valores = simulaciones.map(s => s[fila.key]);
+            const minValor = Math.min(...valores);
+            
+            html += `<tr>
+                <td class="concepto-col">${fila.label}</td>
+                ${simulaciones.map((sim, index) => {
+                    const val = sim[fila.key];
+                    const isBest = Math.abs(val - minValor) < 0.01; // Tolerancia float
+                    const formatted = fila.isCurrency ? 
+                        val.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
+                        val;
+                    
+                    return `<td class="valor-col ${isBest ? 'mejor-valor-cell' : ''} entidad-${index+1}-bg">
+                        ${formatted}
+                        ${isBest ? '<i class="fas fa-check-circle best-icon"></i>' : ''}
+                    </td>`;
+                }).join('')}
+            </tr>`;
+        });
+
+        html += `
+                    </tbody>
+                </table>
             </div>
         `;
+
+        if (recomendacion) {
+            const ahorro = (recomendacion.mejor_intereses.intereses - Math.max(...simulaciones.map(s => s.intereses)) * -1).toLocaleString('es-ES'); // Lógica simple, ajustar si necesario
+            // Mejor usar la logica del servidor si viene
+            
+            html += `
+                <div class="comparacion-recomendacion">
+                    <div class="comparacion-label">Recomendación:</div>
+                    <div class="comparacion-valor">
+                        La mejor opción por <strong>menores intereses</strong> es <strong>${recomendacion.mejor_intereses.entidad}</strong>.
+                    </div>
+                </div>
+            `;
+        }
+        
+        return html;
     }
+
+    // Elementos de inputs globales
     const valorInmuebleInput = document.getElementById('valor_inmueble');
     const ahorrosInput = document.getElementById('ahorros');
-    const itpInput = document.getElementById('itp');
-    const notariaInput = document.getElementById('notaria');
-    const registroInput = document.getElementById('registro');
-    const gestoriaInput = document.getElementById('gestoria');
-    const tasacionInput = document.getElementById('tasacion');
-    const entradaPorcentaje1Input = document.getElementById('entrada_porcentaje1');
-    const entradaPorcentaje2Input = document.getElementById('entrada_porcentaje2');
-    const valor1Input = document.getElementById('valor1');
-    const valor2Input = document.getElementById('valor2');
-    
-    // Calcular valor a financiar cuando cambian los valores relevantes
-    function actualizarValoresFinanciar() {
-        const valorInmueble = parseFloat(valorInmuebleInput.value) || 0;
-        const ahorros = parseFloat(ahorrosInput.value) || 0;
-        const gastosFijos = calcularGastosFijos();
-        
-        // Simulación 1
-        const porcentajeEntrada1 = parseFloat(entradaPorcentaje1Input.value) || 0;
-        const entrada1 = valorInmueble * (porcentajeEntrada1 / 100);
-        const valorFinanciar1 = valorInmueble - entrada1;
-        valor1Input.value = valorFinanciar1;
-        
-        // Simulación 2
-        const porcentajeEntrada2 = parseFloat(entradaPorcentaje2Input.value) || 0;
-        const entrada2 = valorInmueble * (porcentajeEntrada2 / 100);
-        const valorFinanciar2 = valorInmueble - entrada2;
-        valor2Input.value = valorFinanciar2;
-        
-        // Verificar si los ahorros son suficientes para los gastos y las entradas
-        verificarAhorrosSuficientes();
-    }
-    
-    // Calcular el total de gastos fijos
+    // ... otros inputs globales ...
+    const inputsGastos = ['itp', 'notaria', 'registro', 'gestoria', 'tasacion'].map(id => document.getElementById(id));
+
+    // Función genérica para calcular gastos
     function calcularGastosFijos() {
         const valorInmueble = parseFloat(valorInmuebleInput.value) || 0;
-        const itpPorcentaje = parseFloat(itpInput.value) || 0;
-        const itpValor = valorInmueble * (itpPorcentaje / 100);
-        const notaria = parseFloat(notariaInput.value) || 0;
-        const registro = parseFloat(registroInput.value) || 0;
-        const gestoria = parseFloat(gestoriaInput.value) || 0;
-        const tasacion = parseFloat(tasacionInput.value) || 0;
+        let total = 0;
         
-        return itpValor + notaria + registro + gestoria + tasacion;
+        inputsGastos.forEach(input => {
+            if (input.id === 'itp') {
+                total += valorInmueble * ((parseFloat(input.value) || 0) / 100);
+            } else {
+                total += parseFloat(input.value) || 0;
+            }
+        });
+        return total;
     }
-    
-    // Verificar si los ahorros son suficientes
-    function verificarAhorrosSuficientes() {
+
+    // Actualizar valores a financiar
+    function actualizarValoresFinanciar() {
         const valorInmueble = parseFloat(valorInmuebleInput.value) || 0;
-        const ahorros = parseFloat(ahorrosInput.value) || 0;
-        const gastosFijos = calcularGastosFijos();
         
-        // Simulación 1
-        const porcentajeEntrada1 = parseFloat(entradaPorcentaje1Input.value) || 0;
-        const entrada1 = valorInmueble * (porcentajeEntrada1 / 100);
-        const totalNecesario1 = entrada1 + gastosFijos;
-        
-        // Simulación 2
-        const porcentajeEntrada2 = parseFloat(entradaPorcentaje2Input.value) || 0;
-        const entrada2 = valorInmueble * (porcentajeEntrada2 / 100);
-        const totalNecesario2 = entrada2 + gastosFijos;
-        
-        // Verificamos para simulación 1
-        if (ahorros < totalNecesario1) {
-            entradaPorcentaje1Input.setCustomValidity(`Los ahorros no son suficientes. Necesitas ${totalNecesario1.toLocaleString('es-ES')} €`);
-        } else {
-            entradaPorcentaje1Input.setCustomValidity('');
-        }
-        
-        // Verificamos para simulación 2
-        if (ahorros < totalNecesario2) {
-            entradaPorcentaje2Input.setCustomValidity(`Los ahorros no son suficientes. Necesitas ${totalNecesario2.toLocaleString('es-ES')} €`);
-        } else {
-            entradaPorcentaje2Input.setCustomValidity('');
+        // Actualizar para cada panel visible
+        for (let i = 1; i <= numSimulaciones; i++) {
+            const inputEntrada = document.getElementById(`entrada_porcentaje${i}`);
+            const inputValor = document.getElementById(`valor${i}`);
+            
+            if (inputEntrada && inputValor) {
+                const porcentaje = parseFloat(inputEntrada.value) || 0;
+                const entrada = valorInmueble * (porcentaje / 100);
+                inputValor.value = valorInmueble - entrada;
+            }
         }
     }
-    
-    // Eventos para actualizar valores
-    [valorInmuebleInput, ahorrosInput, entradaPorcentaje1Input, entradaPorcentaje2Input,
-     itpInput, notariaInput, registroInput, gestoriaInput, tasacionInput].forEach(input => {
-        input.addEventListener('input', actualizarValoresFinanciar);
+
+    // Listeners para actualizaciones en tiempo real
+    [valorInmuebleInput, ...inputsGastos].forEach(input => {
+        if(input) input.addEventListener('input', actualizarValoresFinanciar);
     });
-    
-    // Evento para calcular al enviar el formulario
+
+    // Añadir listeners dinámicos a los inputs de porcentaje
+    // Usamos delegación de eventos o asignamos a los 4 posibles
+    for (let i = 1; i <= MAX_SIMULACIONES; i++) {
+        const input = document.getElementById(`entrada_porcentaje${i}`);
+        if(input) input.addEventListener('input', actualizarValoresFinanciar);
+        
+        // Sincronización de años (opcional, manteniendo lógica anterior si se desea)
+        const inputAnios = document.getElementById(`anios${i}`);
+        if (i === 1 && inputAnios) {
+            inputAnios.addEventListener('input', function() {
+                // Copiar a los otros si están vacíos o si el usuario quiere (lógica simplificada: copiar siempre por ahora para mantener UX previa)
+                for (let j = 2; j <= numSimulaciones; j++) {
+                    const target = document.getElementById(`anios${j}`);
+                    if (target) target.value = this.value;
+                }
+            });
+        }
+    }
+
+    // Envío del formulario
     formulario.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Verificar si los ahorros son suficientes antes de calcular
+        // Validar ahorros vs gastos (simplificado para N simulaciones)
         const valorInmueble = parseFloat(valorInmuebleInput.value) || 0;
         const ahorros = parseFloat(ahorrosInput.value) || 0;
         const gastosFijos = calcularGastosFijos();
         
-        // Simulación 1
-        const porcentajeEntrada1 = parseFloat(entradaPorcentaje1Input.value) || 0;
-        const entrada1 = valorInmueble * (porcentajeEntrada1 / 100);
-        const totalNecesario1 = entrada1 + gastosFijos;
-        
-        // Simulación 2
-        const porcentajeEntrada2 = parseFloat(entradaPorcentaje2Input.value) || 0;
-        const entrada2 = valorInmueble * (porcentajeEntrada2 / 100);
-        const totalNecesario2 = entrada2 + gastosFijos;
-        
-        if (ahorros < totalNecesario1 || ahorros < totalNecesario2) {
-            alert('Los ahorros disponibles no son suficientes para cubrir la entrada y los gastos fijos.');
-            return;
+        let error = false;
+        for (let i = 1; i <= numSimulaciones; i++) {
+            const inputEntrada = document.getElementById(`entrada_porcentaje${i}`);
+            const porcentaje = parseFloat(inputEntrada.value) || 0;
+            const entrada = valorInmueble * (porcentaje / 100);
+            const totalNecesario = entrada + gastosFijos;
+            
+            if (ahorros < totalNecesario) {
+                alert(`Simulación ${i}: Los ahorros no son suficientes. Necesitas ${totalNecesario.toLocaleString('es-ES')} €`);
+                error = true;
+                break; // Parar al primer error
+            }
         }
         
+        if (error) return;
+
         calcularHipotecas();
     });
-    
-    // Evento para limpiar el formulario
-    btnLimpiar.addEventListener('click', function() {
-        formulario.reset();
-        resultados1.innerHTML = '';
-        resultados2.innerHTML = '';
-        comparacionResultados.innerHTML = '';
-        comparacionResultados.classList.add('hidden');
-    });
-    
-    // Validar que el año de amortización no sea mayor que los años de financiación
-    const anios1Input = document.getElementById('anios1');
-    const anioAmortizacion1Input = document.getElementById('anio_amortizacion1');
-    const anios2Input = document.getElementById('anios2');
-    const anioAmortizacion2Input = document.getElementById('anio_amortizacion2');
-    
-    anioAmortizacion1Input.addEventListener('input', function() {
-        const anios = parseInt(anios1Input.value) || 0;
-        const anioAmortizacion = parseInt(anioAmortizacion1Input.value) || 0;
-        
-        if (anioAmortizacion > anios) {
-            anioAmortizacion1Input.setCustomValidity('El año de amortización no puede ser mayor que los años de financiación');
-        } else {
-            anioAmortizacion1Input.setCustomValidity('');
-        }
-    });
-    
-    anioAmortizacion2Input.addEventListener('input', function() {
-        const anios = parseInt(anios2Input.value) || 0;
-        const anioAmortizacion = parseInt(anioAmortizacion2Input.value) || 0;
-        
-        if (anioAmortizacion > anios) {
-            anioAmortizacion2Input.setCustomValidity('El año de amortización no puede ser mayor que los años de financiación');
-        } else {
-            anioAmortizacion2Input.setCustomValidity('');
-        }
-    });
-    
-    // Duplicar años entre simulaciones
-    anios1Input.addEventListener('input', function() {
-        anios2Input.value = this.value;
-        
-        // Actualizar validación de año de amortización
-        const anioAmortizacion2 = parseInt(anioAmortizacion2Input.value) || 0;
-        if (anioAmortizacion2 > parseInt(this.value)) {
-            anioAmortizacion2Input.setCustomValidity('El año de amortización no puede ser mayor que los años de financiación');
-        } else {
-            anioAmortizacion2Input.setCustomValidity('');
-        }
-    });
-    
-    // Función principal para calcular hipotecas
+
     function calcularHipotecas() {
-        // Obtener datos del formulario
         const formData = new FormData(formulario);
         
-        // Añadir información sobre gastos a los resultados
-        const valorInmueble = parseFloat(valorInmuebleInput.value);
-        const ahorros = parseFloat(ahorrosInput.value);
-        const gastosFijos = calcularGastosFijos();
-        
-        // Simulación 1
-        const porcentajeEntrada1 = parseFloat(entradaPorcentaje1Input.value);
-        const entrada1 = valorInmueble * (porcentajeEntrada1 / 100);
-        const ahorrosRestantes1 = ahorros - entrada1 - gastosFijos;
-        
-        // Simulación 2
-        const porcentajeEntrada2 = parseFloat(entradaPorcentaje2Input.value);
-        const entrada2 = valorInmueble * (porcentajeEntrada2 / 100);
-        const ahorrosRestantes2 = ahorros - entrada2 - gastosFijos;
-        
-        // Enviar datos al servidor
         fetch('/calcular', {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
-            // Mostrar resultados de simulación 1
-            if (data.simulacion1) {
-                resultados1.innerHTML = `
-                    <div class="resultados-seccion">
-                        <h4>Datos de la hipoteca</h4>
-                        <p><strong>Entidad bancaria:</strong> ${data.simulacion1.entidad}</p>
-                        <p><strong>Valor inmueble:</strong> ${valorInmueble.toLocaleString('es-ES')} €</p>
-                        <p><strong>Entrada (${porcentajeEntrada1}%):</strong> ${entrada1.toLocaleString('es-ES')} €</p>
-                        <p><strong>Valor a financiar:</strong> ${data.simulacion1.valor_financiar.toLocaleString('es-ES')} €</p>
-                        <p><strong>Cuota mensual:</strong> ${data.simulacion1.cuota.toLocaleString('es-ES')} €</p>
-                        <p><strong>Total pagado en hipoteca:</strong> ${data.simulacion1.total.toLocaleString('es-ES')} €</p>
-                        <p><strong>Total pagado (hipoteca + entrada + gastos):</strong> ${(data.simulacion1.total + entrada1 + gastosFijos).toLocaleString('es-ES')} €</p>
-                        <p><strong>Total intereses:</strong> ${data.simulacion1.intereses.toLocaleString('es-ES')} €</p>
-                        <p><strong>Intereses hasta amortización:</strong> ${data.simulacion1.intereses_acumulados.toLocaleString('es-ES')} €</p>
-                    </div>
-
-                    <div class="resultados-seccion">
-                        <h4>Gastos y ahorros</h4>
-                        <p><strong>Entrada (${porcentajeEntrada1}%):</strong> ${entrada1.toLocaleString('es-ES')} €</p>
-                        <p><strong>ITP (${parseFloat(itpInput.value)}%):</strong> ${(valorInmueble * parseFloat(itpInput.value) / 100).toLocaleString('es-ES')} €</p>
-                        <p><strong>Otros gastos fijos:</strong> ${(gastosFijos - (valorInmueble * parseFloat(itpInput.value) / 100)).toLocaleString('es-ES')} €</p>
-                        <p><strong>Total gastos fijos:</strong> ${gastosFijos.toLocaleString('es-ES')} €</p>
-                        <p><strong>Desembolso inicial:</strong> <span class="gasto-destacado">${(entrada1 + gastosFijos).toLocaleString('es-ES')} €</span></p>
-                        <p><strong>Ahorros restantes:</strong> <span class="ahorro-destacado">${ahorrosRestantes1.toLocaleString('es-ES')} €</span></p>
-                    </div>
-                `;
-                resultados1.classList.remove('error');
-            } else {
-                resultados1.innerHTML = '<p>No se han podido calcular los resultados. Verifica los datos introducidos.</p>';
-                resultados1.classList.add('error');
+            // Renderizar resultados individuales
+            if (data.simulaciones) {
+                data.simulaciones.forEach(sim => {
+                    const resultDiv = document.getElementById(`resultados${sim.id}`);
+                    if (resultDiv) {
+                        resultDiv.innerHTML = generarHTMLResultado(sim, data.gastos_fijos_total, data.valor_inmueble, data.ahorros);
+                        resultDiv.classList.remove('error');
+                    }
+                });
             }
-            
-            // Mostrar resultados de simulación 2
-            if (data.simulacion2) {
-                resultados2.innerHTML = `
-                    <div class="resultados-seccion">
-                        <h4>Datos de la hipoteca</h4>
-                        <p><strong>Entidad bancaria:</strong> ${data.simulacion2.entidad}</p>
-                        <p><strong>Valor inmueble:</strong> ${valorInmueble.toLocaleString('es-ES')} €</p>
-                        <p><strong>Entrada (${porcentajeEntrada2}%):</strong> ${entrada2.toLocaleString('es-ES')} €</p>
-                        <p><strong>Valor a financiar:</strong> ${data.simulacion2.valor_financiar.toLocaleString('es-ES')} €</p>
-                        <p><strong>Cuota mensual:</strong> ${data.simulacion2.cuota.toLocaleString('es-ES')} €</p>
-                        <p><strong>Total pagado en hipoteca:</strong> ${data.simulacion2.total.toLocaleString('es-ES')} €</p>
-                        <p><strong>Total pagado (hipoteca + entrada + gastos):</strong> ${(data.simulacion2.total + entrada2 + gastosFijos).toLocaleString('es-ES')} €</p>
-                        <p><strong>Total intereses:</strong> ${data.simulacion2.intereses.toLocaleString('es-ES')} €</p>
-                        <p><strong>Intereses hasta amortización:</strong> ${data.simulacion2.intereses_acumulados.toLocaleString('es-ES')} €</p>
-                    </div>
 
-                    <div class="resultados-seccion">
-                        <h4>Gastos y ahorros</h4>
-                        <p><strong>Entrada (${porcentajeEntrada2}%):</strong> ${entrada2.toLocaleString('es-ES')} €</p>
-                        <p><strong>ITP (${parseFloat(itpInput.value)}%):</strong> ${(valorInmueble * parseFloat(itpInput.value) / 100).toLocaleString('es-ES')} €</p>
-                        <p><strong>Otros gastos fijos:</strong> ${(gastosFijos - (valorInmueble * parseFloat(itpInput.value) / 100)).toLocaleString('es-ES')} €</p>
-                        <p><strong>Total gastos fijos:</strong> ${gastosFijos.toLocaleString('es-ES')} €</p>
-                        <p><strong>Desembolso inicial:</strong> <span class="gasto-destacado">${(entrada2 + gastosFijos).toLocaleString('es-ES')} €</span></p>
-                        <p><strong>Ahorros restantes:</strong> <span class="ahorro-destacado">${ahorrosRestantes2.toLocaleString('es-ES')} €</span></p>
-                    </div>
-                `;
-                resultados2.classList.remove('error');
-            } else {
-                resultados2.innerHTML = '<p>No se han podido calcular los resultados. Verifica los datos introducidos.</p>';
-                resultados2.classList.add('error');
-            }
-            
-            // Mostrar comparación si hay resultados en ambas simulaciones
-            if (data.diferencias) {
-                const entidad1 = data.simulacion1.entidad;
-                const entidad2 = data.simulacion2.entidad;
-                
-                let htmlComparacion = `
-                    <h2>Comparativa entre entidades</h2>
-                    <div class="comparacion-header">
-                        <div class="comparacion-entidad entidad1">${entidad1}</div>
-                        <div class="comparacion-vs">VS</div>
-                        <div class="comparacion-entidad entidad2">${entidad2}</div>
-                    </div>
-                `;
-                
-                // Desembolso inicial
-                const desembolso1 = entrada1 + gastosFijos;
-                const desembolso2 = entrada2 + gastosFijos;
-                const difDesembolso = desembolso1 - desembolso2;
-                
-                htmlComparacion += crearFilaComparacionMejorada(
-                    'Desembolso inicial',
-                    desembolso1,
-                    desembolso2,
-                    entidad1,
-                    entidad2
-                );
-                
-                // Cuota mensual
-                htmlComparacion += crearFilaComparacionMejorada(
-                    'Cuota mensual',
-                    data.simulacion1.cuota,
-                    data.simulacion2.cuota,
-                    entidad1,
-                    entidad2
-                );
-                
-                // Total intereses
-                htmlComparacion += crearFilaComparacionMejorada(
-                    'Total intereses',
-                    data.simulacion1.intereses,
-                    data.simulacion2.intereses,
-                    entidad1,
-                    entidad2
-                );
-                
-                // Comparativa de intereses hasta amortización
-                htmlComparacion += crearFilaComparacionMejorada(
-                    'Intereses hasta amortización',
-                    data.simulacion1.intereses_acumulados,
-                    data.simulacion2.intereses_acumulados,
-                    entidad1,
-                    entidad2
-                );
-                
-                // Añadir recomendación basada en intereses totales
-                const mejorOpcion = data.simulacion1.intereses < data.simulacion2.intereses ? entidad1 : entidad2;
-                const ahorro = Math.abs(data.diferencias.intereses).toLocaleString('es-ES');
-                
-                htmlComparacion += `
-                    <div class="comparacion-item comparacion-recomendacion">
-                        <div class="comparacion-label">Recomendación (por intereses):</div>
-                        <div class="comparacion-valor">
-                            <strong>${mejorOpcion}</strong> - Ahorro en intereses de <strong>${ahorro} €</strong>
-                        </div>
-                    </div>
-                `;
-                
-                comparacionResultados.innerHTML = htmlComparacion;
+            // Renderizar comparativa si hay más de 1 simulación
+            if (data.num_simulaciones > 1 && data.simulaciones && data.simulaciones.length > 1) {
+                comparacionResultados.innerHTML = crearTablaComparacion(data.simulaciones, data.recomendacion);
                 comparacionResultados.classList.remove('hidden');
             } else {
                 comparacionResultados.classList.add('hidden');
@@ -375,25 +258,67 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Ha ocurrido un error al calcular las hipotecas.');
+            alert('Error al calcular hipotecas');
         });
     }
-    
-    // Función para crear filas de comparación
-    function crearFilaComparacion(etiqueta, valor, entidad1, entidad2) {
-        const esPositivo = valor > 0;
-        const claseCSS = esPositivo ? 'diferencia-positiva' : 'diferencia-negativa';
-        const mejorEntidad = esPositivo ? entidad2 : entidad1;
-        const valorAbsoluto = Math.abs(valor).toLocaleString('es-ES');
-        const icono = esPositivo ? '↓' : '↑';
+
+    function generarHTMLResultado(sim, gastosFijos, valorInmueble, ahorros) {
+        const entrada = sim.entrada_valor;
+        const itpInput = document.getElementById('itp');
+        const itpPorcentaje = parseFloat(itpInput.value) || 0;
         
         return `
-            <div class="comparacion-item">
-                <div class="comparacion-label">${etiqueta}:</div>
-                <div class="comparacion-valor ${claseCSS}">
-                    ${valorAbsoluto} € ${icono} (Mejor: ${mejorEntidad})
-                </div>
+            <div class="resultados-seccion">
+                <h4>Datos de la hipoteca</h4>
+                <p><strong>Entidad:</strong> ${sim.entidad}</p>
+                <p><strong>Cuota mensual:</strong> ${sim.cuota.toLocaleString('es-ES')} €</p>
+                <p><strong>Total intereses:</strong> ${sim.intereses.toLocaleString('es-ES')} €</p>
+                <p><strong>Total pagado:</strong> ${sim.total.toLocaleString('es-ES')} €</p>
+            </div>
+            <div class="resultados-seccion">
+                <h4>Gastos iniciales</h4>
+                <p><strong>Entidad + Gastos:</strong> <span class="gasto-destacado">${sim.desembolso_inicial.toLocaleString('es-ES')} €</span></p>
+                <p><strong>Ahorros restantes:</strong> <span class="ahorro-destacado">${sim.ahorros_restantes.toLocaleString('es-ES')} €</span></p>
             </div>
         `;
+    }
+
+    // Botón Limpiar
+    btnLimpiar.addEventListener('click', function() {
+        formulario.reset();
+        for (let i = 1; i <= MAX_SIMULACIONES; i++) {
+            document.getElementById(`resultados${i}`).innerHTML = '';
+        }
+        comparacionResultados.innerHTML = '';
+        comparacionResultados.classList.add('hidden');
+        actualizarVisibilidadPaneles(); // Resetear visibilidad
+    });
+
+    // Botón PDF
+    if (btnPdf) {
+        btnPdf.addEventListener('click', function() {
+             // Validaciones básicas
+            const valorInmueble = parseFloat(valorInmuebleInput.value) || 0;
+            if (valorInmueble <= 0) {
+                 alert('Por favor, introduce los datos necesarios.');
+                 return;
+            }
+
+            const originalAction = formulario.action;
+            const originalTarget = formulario.target;
+            const originalMethod = formulario.method;
+            
+            formulario.action = '/descargar-pdf';
+            formulario.target = '_blank';
+            formulario.method = 'POST';
+            
+            formulario.submit();
+            
+            setTimeout(() => {
+                formulario.action = originalAction;
+                formulario.target = originalTarget;
+                formulario.method = originalMethod;
+            }, 100);
+        });
     }
 });

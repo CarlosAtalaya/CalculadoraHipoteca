@@ -1,0 +1,17 @@
+Hola, tengo este repositorio donde en la carpeta @flask_server enocntraras todo el codigo relacionado con mi apgina web, la cual se trata de un simulador y comparador de ofertas hipotecarias para ver con numeros reales en cuanto s eme queda una cuota hipotecaria con una serie de condiciones que me pone cada banco en cada oferta. Este simulador quiero que me ayude como herrameinta completamente necesaria a la hroa de tomar una decision tan importante como es la de elegir una hipoeca en un inmueble qu eya tengo elegido
+
+Te voy a dar una serie de  instrucciones sobre el cálculo avanzado del TAE.
+Hay paginas que ya ofrecen hacer ese calculo correctamente en funcion de la contartacion de productos bancarios que los bancos suelen incluir para "obligarte" a coger la hipoteca con ellos.
+
+Hasta ahora en mi pagina, ahora mismo se le pide al usario que intreduzca una TAE directamente, pero esa TAE como bein sabes va a en funcion de un TIN y una serie de productos contratados, que ese apartado se puede hacer muy extenso y tedioso, por lo que te daré una referencia de pagina web que me gusta para que le copeies la idea y lo adapte sa mi pagina
+
+Para hacer el calculo avanzado del TAE, quiero que te fijes en la simulacion de esta pagina:
+https://www.economiaresponsablefinanzas.com/hipotecas/calculadora-de-hipotecas/ 
+
+Quiero que analices correctamente qué productos tiene contemplados para hacer el calculo y poder hacer una simulacion. No me gustaría que apareciese en la vista rpincipal de mi pagina, quiero que sea como un desplegable en el que el usario pueda o o no deidir calcular su TAE con el TIN que le dan en cada oferta bancaria y con los productos que le obligan a contratar.
+
+Además, quero que también se incluya el producto de alarma, que puede ser a veces también comun. 
+
+En cuanto a la logica del calculo del TAe con esa contratacion de productos, quiero que busques informacion relevante oara que mi codigo sea lo mas limpio posible y correctamente codificado para hacer un calculo preciso y veraz, vale?
+
+Además, quiero que en el reporte también aparezca la informacion relevante en cuanto a productos en cada oferta contratados para cada ismulacion para que se tenga el contexto.,

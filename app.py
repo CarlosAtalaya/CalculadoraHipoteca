@@ -1,13 +1,16 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
+import io
+from datetime import datetime
+from pdf_generator import generate_pdf_report
 
 app = Flask(__name__)
 
-# Función para calcular cuotas de una simulación (sin dependencias de tkinter)
+# Función para calcular cuotas de una simulación
 def calcular_cuotas_simulacion(valor_prestamo, anios, interes_anual, anio_amortizacion):
     try:
         # Validación de datos
         if not (valor_prestamo and anios and interes_anual and anio_amortizacion):
-            return None, None, None, None  # Si algún dato está vacío, no calcula nada
+            return None, None, None, None
 
         # Conversión de entrada
         valor_prestamo = float(valor_prestamo)
@@ -46,93 +49,151 @@ def calcular_cuotas_simulacion(valor_prestamo, anios, interes_anual, anio_amorti
     except ValueError:
         return None, None, None, None
 
+def process_simulation_data(form_data):
+    # Obtener datos generales
+    valor_inmueble = form_data.get('valor_inmueble', '')
+    ahorros = form_data.get('ahorros', '')
+    itp_porcentaje = form_data.get('itp', '')
+    notaria = form_data.get('notaria', '')
+    registro = form_data.get('registro', '')
+    gestoria = form_data.get('gestoria', '')
+    tasacion = form_data.get('tasacion', '')
+    
+    # Determinar cuántas simulaciones procesar
+    try:
+        num_simulaciones = int(form_data.get('num_simulaciones', 2))
+    except ValueError:
+        num_simulaciones = 2
+
+    data = {
+        'valor_inmueble': 0,
+        'ahorros': 0,
+        'gastos_fijos_detalles': {},
+        'gastos_fijos_total': 0,
+        'simulaciones': [], # Lista para guardar N simulaciones
+        'num_simulaciones': num_simulaciones
+    }
+
+    # Calcular gastos fijos
+    try:
+        data['valor_inmueble'] = float(valor_inmueble)
+        data['ahorros'] = float(ahorros)
+        itp_valor = data['valor_inmueble'] * (float(itp_porcentaje) / 100)
+        
+        data['gastos_fijos_detalles'] = {
+            'itp_porcentaje': float(itp_porcentaje),
+            'itp_valor': itp_valor,
+            'notaria': float(notaria),
+            'registro': float(registro),
+            'gestoria': float(gestoria),
+            'tasacion': float(tasacion)
+        }
+        
+        data['gastos_fijos_total'] = (
+            itp_valor + 
+            data['gastos_fijos_detalles']['notaria'] + 
+            data['gastos_fijos_detalles']['registro'] + 
+            data['gastos_fijos_detalles']['gestoria'] + 
+            data['gastos_fijos_detalles']['tasacion']
+        )
+    except ValueError:
+        pass
+    
+    # Procesar N simulaciones
+    for i in range(1, num_simulaciones + 1):
+        suffix = str(i)
+        
+        # Obtener datos específicos de esta simulación
+        entidad = form_data.get(f'entidad{suffix}', '')
+        valor = form_data.get(f'valor{suffix}', '')
+        anios = form_data.get(f'anios{suffix}', '')
+        interes = form_data.get(f'interes{suffix}', '')
+        anio_amortizacion = form_data.get(f'anio_amortizacion{suffix}', '')
+        entrada_porcentaje = form_data.get(f'entrada_porcentaje{suffix}', '')
+
+        sim_input = {
+            'id': i,
+            'entidad': entidad,
+            'valor': valor,
+            'anios': anios,
+            'interes': interes,
+            'entrada_porcentaje': entrada_porcentaje
+        }
+        
+        # Calcular resultados
+        cuota, total, intereses, acum = calcular_cuotas_simulacion(
+            valor, anios, interes, anio_amortizacion
+        )
+        
+        sim_result = None
+        if cuota:
+            sim_result = {
+                'id': i,
+                'entidad': entidad if entidad else f"Opción {i}",
+                'valor_financiar': float(valor),
+                'cuota': cuota,
+                'total': total,
+                'intereses': intereses,
+                'intereses_acumulados': acum,
+                'input': sim_input
+            }
+            
+            # Calcular entrada valor y ahorros restantes
+            try:
+                entrada_val = data['valor_inmueble'] * (float(entrada_porcentaje) / 100)
+                sim_result['entrada_valor'] = entrada_val
+                sim_result['desembolso_inicial'] = entrada_val + data['gastos_fijos_total']
+                sim_result['ahorros_restantes'] = data['ahorros'] - sim_result['desembolso_inicial']
+            except:
+                sim_result['entrada_valor'] = 0
+                sim_result['desembolso_inicial'] = 0
+                sim_result['ahorros_restantes'] = 0
+
+        data['simulaciones'].append(sim_result)
+
+    # Identificar la mejor opción (solo si hay al menos 2 simulaciones válidas)
+    valid_sims = [s for s in data['simulaciones'] if s is not None]
+    if len(valid_sims) >= 2:
+        # Encontrar mejor opción por intereses totales
+        mejor_interes = min(valid_sims, key=lambda x: x['intereses'])
+        # Encontrar mejor opción por cuota
+        mejor_cuota = min(valid_sims, key=lambda x: x['cuota'])
+        
+        data['recomendacion'] = {
+            'mejor_intereses': mejor_interes,
+            'mejor_cuota': mejor_cuota
+        }
+        
+    return data
+
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/calcular', methods=['POST'])
 def calcular():
-    # Obtener datos generales
-    valor_inmueble = request.form.get('valor_inmueble', '')
-    ahorros = request.form.get('ahorros', '')
-    itp_porcentaje = request.form.get('itp', '')
-    notaria = request.form.get('notaria', '')
-    registro = request.form.get('registro', '')
-    gestoria = request.form.get('gestoria', '')
-    tasacion = request.form.get('tasacion', '')
+    data = process_simulation_data(request.form)
+    return jsonify(data)
+
+@app.route('/descargar-pdf', methods=['POST'])
+def descargar_pdf():
+    data = process_simulation_data(request.form)
+    pdf = generate_pdf_report(data)
     
-    # Calcular gastos fijos
-    try:
-        valor_inmueble_float = float(valor_inmueble)
-        itp_valor = valor_inmueble_float * (float(itp_porcentaje) / 100)
-        gastos_fijos = itp_valor + float(notaria) + float(registro) + float(gestoria) + float(tasacion)
-    except ValueError:
-        gastos_fijos = 0
+    # Generar nombre de archivo con fecha y hora
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M")
+    filename = f"reporte_hipotecas_{timestamp}.pdf"
     
-    # Obtener datos del formulario para ambas simulaciones
-    # Simulación 1
-    nombre_entidad1 = request.form.get('entidad1', '')
-    entrada_porcentaje1 = request.form.get('entrada_porcentaje1', '')
-    valor1 = request.form.get('valor1', '')
-    anios1 = request.form.get('anios1', '')
-    interes1 = request.form.get('interes1', '')
-    anio_amortizacion1 = request.form.get('anio_amortizacion1', '')
+    # Generar el PDF en memoria
+    pdf_output = io.BytesIO()
+    pdf.output(pdf_output)
+    pdf_output.seek(0)
     
-    # Simulación 2
-    nombre_entidad2 = request.form.get('entidad2', '')
-    entrada_porcentaje2 = request.form.get('entrada_porcentaje2', '')
-    valor2 = request.form.get('valor2', '')
-    anios2 = request.form.get('anios2', '')
-    interes2 = request.form.get('interes2', '')
-    anio_amortizacion2 = request.form.get('anio_amortizacion2', '')
+    response = make_response(pdf_output.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename={filename}'
     
-    # Calcular resultados
-    resultados = {}
-    
-    # Simulación 1
-    cuota1, total1, intereses1, acum1 = calcular_cuotas_simulacion(
-        valor1, anios1, interes1, anio_amortizacion1
-    )
-    if cuota1:
-        resultados['simulacion1'] = {
-            'entidad': nombre_entidad1,
-            'valor_financiar': float(valor1),
-            'cuota': cuota1,
-            'total': total1,
-            'intereses': intereses1,
-            'intereses_acumulados': acum1
-        }
-    else:
-        resultados['simulacion1'] = None
-        
-    # Simulación 2
-    cuota2, total2, intereses2, acum2 = calcular_cuotas_simulacion(
-        valor2, anios2, interes2, anio_amortizacion2
-    )
-    if cuota2:
-        resultados['simulacion2'] = {
-            'entidad': nombre_entidad2,
-            'valor_financiar': float(valor2),
-            'cuota': cuota2,
-            'total': total2,
-            'intereses': intereses2,
-            'intereses_acumulados': acum2
-        }
-    else:
-        resultados['simulacion2'] = None
-    
-    # Calcular diferencias si ambas simulaciones tienen resultados
-    if resultados['simulacion1'] and resultados['simulacion2']:
-        diferencia_cuota = cuota1 - cuota2
-        diferencia_total = total1 - total2
-        diferencia_intereses = intereses1 - intereses2
-        resultados['diferencias'] = {
-            'cuota': round(diferencia_cuota, 2),
-            'total': round(diferencia_total, 2),
-            'intereses': round(diferencia_intereses, 2)
-        }
-    
-    return jsonify(resultados)
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)
