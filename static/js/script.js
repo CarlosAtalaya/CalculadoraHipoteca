@@ -7,9 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Configuración inicial
     const MAX_SIMULACIONES = 4;
-    let numSimulaciones = 2; // Valor por defecto
+    let numSimulaciones = 2;
 
-    // Función para gestionar la visibilidad de los paneles
     function actualizarVisibilidadPaneles() {
         numSimulaciones = parseInt(numSimulacionesSelect.value);
         
@@ -19,39 +18,51 @@ document.addEventListener('DOMContentLoaded', function() {
             
             if (i <= numSimulaciones) {
                 panel.classList.remove('hidden');
-                // Activar campos requeridos
                 inputs.forEach(input => {
-                    // Si el input está dentro del contenedor de productos (hidden), no debe ser required
                     if (input.closest('.productos-container')) {
                         input.required = false;
+                        // Restaurar valores por defecto si están vacíos y el input tiene un atributo value
+                        if (input.type === 'number' && !input.value && input.hasAttribute('value')) {
+                            input.value = input.getAttribute('value');
+                        }
                     } else if (input.id.includes('valor') || input.id.includes('interes')) {
-                        // valorN e interesN son readonly o calculados
+                        // readonly
+                    } else if (input.type === 'checkbox' && input.id.includes('bonificacion_permanente')) {
+                        // Los checkboxes de bonificación permanente no son obligatorios
+                        input.required = false;
                     } else if (input.dataset.wasRequired) {
                         input.required = true;
                     } else {
-                        // Lógica básica para campos principales
                         input.required = true;
                     }
                 });
             } else {
                 panel.classList.add('hidden');
-                // Desactivar campos requeridos
                 inputs.forEach(input => {
                     if (input.required) {
                         input.dataset.wasRequired = "true"; 
                         input.required = false;
                     }
                 });
-                // Limpiar valores de paneles ocultos
+                // Limpiar valores solo cuando se oculta el panel
                 inputs.forEach(input => {
-                    if(input.type === 'checkbox') input.checked = false;
-                    else input.value = '';
+                    // No limpiar checkboxes de bonificación permanente ni valores por defecto de productos
+                    if (input.id && input.id.includes('bonificacion_permanente')) {
+                        // Mantener el estado del checkbox
+                    } else if (input.closest('.productos-container')) {
+                        // Limpiar productos cuando se oculta
+                        if(input.type === 'checkbox') input.checked = false;
+                        else if (!input.disabled) input.value = '';
+                    } else if(input.type === 'checkbox') {
+                        input.checked = false;
+                    } else if (!input.readOnly) {
+                        input.value = '';
+                    }
                 });
                 document.getElementById(`resultados${i}`).innerHTML = '';
             }
         }
         
-        // Actualizar grid layout
         const container = document.querySelector('.simulaciones-container');
         container.className = 'simulaciones-container'; 
         if (numSimulaciones === 1) container.classList.add('grid-1');
@@ -63,13 +74,11 @@ document.addEventListener('DOMContentLoaded', function() {
         comparacionResultados.classList.add('hidden');
     }
 
-    // Listener para el selector de número de simulaciones
     if (numSimulacionesSelect) {
         numSimulacionesSelect.addEventListener('change', actualizarVisibilidadPaneles);
     }
     
-    // --- LÓGICA DE CALCULADORA AVANZADA DE TAE ---
-    
+    // --- LÓGICA DE CALCULADORA AVANZADA ---
     window.toggleProductos = function(id) {
         const container = document.getElementById(`productos-container${id}`);
         container.classList.toggle('hidden');
@@ -77,62 +86,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function calcularBonificaciones(simId) {
         const tinPartidaInput = document.getElementById(`tin_partida${simId}`);
-        const interesInput = document.getElementById(`interes${simId}`); // Este es el campo "TAE Bonificado"
+        const interesInput = document.getElementById(`interes${simId}`);
         const jsonInput = document.getElementById(`productos_json${simId}`);
         
         if (!tinPartidaInput || !interesInput) return;
 
         let tinBase = parseFloat(tinPartidaInput.value) || 0;
         let bonificacionTotal = 0;
-        let costeProductosAnual = 0;
+        let costeProductosVidaTotal = 0; // Coste total en toda la vida de la hipoteca
         let listaProductos = [];
 
-        // Buscar todos los checkboxes de productos de esta simulación
         const checkboxes = document.querySelectorAll(`.prod-check[data-sim="${simId}"]`);
         
         checkboxes.forEach(chk => {
             if (chk.checked) {
-                // NUEVO: Buscar el input de bonificación en la misma fila
                 const row = chk.closest('.producto-row');
-                const bonifInput = row.querySelector('.bonif-input');
-                let bonif = 0;
                 
-                if (bonifInput) {
-                    bonif = parseFloat(bonifInput.value) || 0;
-                }
+                // Bonificación
+                const bonifInput = row.querySelector('.bonif-input');
+                const bonif = bonifInput ? (parseFloat(bonifInput.value) || 0) : 0;
 
-                // Buscar el coste asociado (input hermano)
+                // Coste Anual
                 const costeInput = row.querySelector('.coste-input');
-                let coste = 0;
-                if (costeInput) {
-                    coste = parseFloat(costeInput.value) || 0;
-                }
+                const coste = costeInput ? (parseFloat(costeInput.value) || 0) : 0;
 
-                const nombre = chk.value;
+                // Duración
+                const duracionInput = row.querySelector('.duracion-input');
+                const duracion = duracionInput ? (parseFloat(duracionInput.value) || 0) : 0;
 
                 bonificacionTotal += bonif;
-                costeProductosAnual += coste;
+                // Calculamos el coste total de este producto: coste/año * años
+                const costeTotalProd = parseFloat((coste * duracion).toFixed(2));
+                costeProductosVidaTotal += costeTotalProd;
                 
                 listaProductos.push({
-                    nombre: nombre,
-                    bonificacion: bonif,
-                    coste: coste
+                    nombre: chk.value,
+                    bonificacion: parseFloat(bonif.toFixed(4)),
+                    coste_anual: parseFloat(coste.toFixed(2)),
+                    duracion: parseFloat(duracion.toFixed(2)),
+                    coste_total: costeTotalProd
                 });
             }
         });
 
-        // Calcular TIN Final (No puede ser negativo)
         let tinFinal = tinBase - bonificacionTotal;
         if (tinFinal < 0) tinFinal = 0;
 
-        // Actualizar el campo visual y el que se envía al servidor
-        interesInput.value = tinFinal.toFixed(2);
+        // Mantener precisión pero mostrar con decimales razonables
+        interesInput.value = tinFinal.toFixed(4).replace(/\.?0+$/, '');
 
-        // Guardar datos completos en el input oculto JSON
+        // Guardamos todo el detalle
         const datosExtra = {
-            tin_partida: tinBase,
-            bonificacion_total: bonificacionTotal,
-            coste_productos_anual: costeProductosAnual,
+            tin_partida: parseFloat(tinBase.toFixed(4)),
+            bonificacion_total: parseFloat(bonificacionTotal.toFixed(4)),
+            coste_productos_vida_total: parseFloat(costeProductosVidaTotal.toFixed(2)),
             detalle: listaProductos
         };
         
@@ -141,36 +148,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Inicializar listeners para todos los campos de calculadora
+    // Inicializar listeners
     for (let i = 1; i <= MAX_SIMULACIONES; i++) {
-        // TIN Partida
-        const tinInput = document.getElementById(`tin_partida${i}`);
-        if (tinInput) {
-            tinInput.addEventListener('input', () => calcularBonificaciones(i));
-        }
+        const elements = [
+            document.getElementById(`tin_partida${i}`),
+            ...document.querySelectorAll(`.prod-check[data-sim="${i}"]`),
+            ...document.querySelectorAll(`.bonif-input[data-sim="${i}"]`),
+            ...document.querySelectorAll(`.coste-input[data-sim="${i}"]`),
+            ...document.querySelectorAll(`.duracion-input[data-sim="${i}"]`)
+        ];
 
-        // Checkboxes
-        const checkboxes = document.querySelectorAll(`.prod-check[data-sim="${i}"]`);
-        checkboxes.forEach(chk => {
-            chk.addEventListener('change', () => calcularBonificaciones(i));
-        });
-
-        // Inputs de Coste
-        const costes = document.querySelectorAll(`.coste-input[data-sim="${i}"]`);
-        costes.forEach(inp => {
-            inp.addEventListener('input', () => calcularBonificaciones(i));
-        });
-
-        // NUEVO: Inputs de Bonificación Manual
-        const bonifs = document.querySelectorAll(`.bonif-input[data-sim="${i}"]`);
-        bonifs.forEach(inp => {
-            inp.addEventListener('input', () => calcularBonificaciones(i));
+        elements.forEach(el => {
+            if(el) el.addEventListener('input', () => calcularBonificaciones(i));
+            if(el && el.type === 'checkbox') el.addEventListener('change', () => calcularBonificaciones(i));
         });
     }
 
-    // --- FIN LÓGICA CALCULADORA ---
-
-    // Elementos de inputs globales para gastos
+    // --- CÁLCULOS GLOBALES ---
     const valorInmuebleInput = document.getElementById('valor_inmueble');
     const ahorrosInput = document.getElementById('ahorros');
     const inputsGastos = ['itp', 'notaria', 'registro', 'gestoria', 'tasacion'].map(id => document.getElementById(id));
@@ -178,7 +172,6 @@ document.addEventListener('DOMContentLoaded', function() {
     function calcularGastosFijos() {
         const valorInmueble = parseFloat(valorInmuebleInput.value) || 0;
         let total = 0;
-        
         inputsGastos.forEach(input => {
             if (input.id === 'itp') {
                 total += valorInmueble * ((parseFloat(input.value) || 0) / 100);
@@ -211,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if(input) input.addEventListener('input', actualizarValoresFinanciar);
     }
 
-    // Envío del formulario
     formulario.addEventListener('submit', function(e) {
         e.preventDefault();
         
@@ -227,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const totalNecesario = entrada + gastosFijos;
             
             if (ahorros < totalNecesario) {
-                alert(`Simulación ${i}: Los ahorros no son suficientes. Necesitas ${totalNecesario.toLocaleString('es-ES', {maximumFractionDigits:0})} €`);
+                alert(`Simulación ${i}: Ahorros insuficientes. Necesitas ${totalNecesario.toLocaleString('es-ES', {maximumFractionDigits:0})} €`);
                 error = true;
                 break;
             }
@@ -265,28 +257,53 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error al calcular hipotecas. Verifica los datos.');
+            alert('Error al calcular. Revisa los datos.');
         });
     }
 
     function generarHTMLResultado(sim) {
-        let costeProductosHtml = '';
-        if (sim.productos && sim.productos.coste_productos_anual > 0) {
-            costeProductosHtml = `<p><strong>Coste anual productos:</strong> ${sim.productos.coste_productos_anual.toLocaleString('es-ES')} €</p>`;
+        let detalleProductos = '';
+        if (sim.productos && sim.productos.detalle.length > 0) {
+            detalleProductos = `<div style="margin-top:10px; font-size:0.9rem; background:#fff; padding:10px; border-radius:5px;">
+                <strong>Detalle Vinculaciones:</strong><ul style="padding-left:20px; margin:5px 0;">`;
+            
+            sim.productos.detalle.forEach(p => {
+                detalleProductos += `<li>${p.nombre}: ${p.coste_total.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € (${p.duracion} años)</li>`;
+            });
+            
+            detalleProductos += `</ul>
+                <div style="text-align:right; margin-top:5px; color:#c0392b;"><strong>+ ${sim.productos.coste_productos_vida_total.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} € en productos</strong></div>`;
+            
+            // Mostrar información sobre bonificación permanente/temporal
+            if (sim.bonificacion_permanente !== undefined) {
+                const tipoBonif = sim.bonificacion_permanente 
+                    ? '<span style="color:#2ecc71; font-weight:bold;">✓ Bonificación permanente</span>' 
+                    : '<span style="color:#e74c3c; font-weight:bold;">⚠ Bonificación temporal</span>';
+                detalleProductos += `<div style="margin-top:8px; padding-top:8px; border-top:1px solid #eee; font-size:0.85rem;">${tipoBonif} - ${sim.bonificacion_permanente ? 'El TIN bonificado se mantiene toda la vida' : 'El interés volverá al TIN de partida cuando expiren los productos'}</div>`;
+            }
+            
+            detalleProductos += `</div>`;
+        }
+
+        let interesesAcumuladosInfo = '';
+        if (sim.intereses_acumulados !== undefined && sim.intereses_acumulados !== null) {
+            const anioAmortizacion = sim.input && sim.input.anio_amortizacion ? sim.input.anio_amortizacion : '';
+            interesesAcumuladosInfo = `<p><strong>Intereses hasta año ${anioAmortizacion || 'amortización'}:</strong> ${sim.intereses_acumulados.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</p>`;
         }
 
         return `
             <div class="resultados-seccion">
-                <h4>Resultados de la Hipoteca</h4>
-                <p><strong>Cuota mensual:</strong> ${sim.cuota.toLocaleString('es-ES')} €</p>
-                <p><strong>Total intereses:</strong> ${sim.intereses.toLocaleString('es-ES')} €</p>
-                <p><strong>Total pagado (Banco):</strong> ${sim.total.toLocaleString('es-ES')} €</p>
-                ${costeProductosHtml}
+                <h4>Financiero</h4>
+                <p><strong>Cuota mensual:</strong> ${sim.cuota.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</p>
+                <p><strong>Total intereses (vida completa):</strong> ${sim.intereses.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</p>
+                ${interesesAcumuladosInfo}
+                <p><strong>Total pagado (Banco):</strong> ${sim.total.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</p>
+                ${detalleProductos}
             </div>
             <div class="resultados-seccion">
-                <h4>Gastos Iniciales</h4>
-                <p><strong>Entrada + Gastos:</strong> <span class="gasto-destacado">${sim.desembolso_inicial.toLocaleString('es-ES')} €</span></p>
-                <p><strong>Ahorros restantes:</strong> <span class="ahorro-destacado">${sim.ahorros_restantes.toLocaleString('es-ES')} €</span></p>
+                <h4>Coste Real Final</h4>
+                <p style="font-size:1.1rem; color:#2c3e50;"><strong>${sim.total_con_productos.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2})} €</strong></p>
+                <small>(Incluye hipoteca + coste productos durante su duración)</small>
             </div>
         `;
     }
@@ -295,35 +312,37 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!simulaciones || simulaciones.length < 2) return '';
 
         let html = `
-            <h2>Comparativa y Coste Real</h2>
+            <h2>Comparativa Total</h2>
             <div class="comparacion-table-container">
                 <table class="comparacion-table">
                     <thead>
                         <tr>
                             <th>Concepto</th>
-                            ${simulaciones.map((sim, index) => 
-                                `<th class="entidad-header">${sim.entidad}</th>`
-                            ).join('')}
+                            ${simulaciones.map(sim => `<th class="entidad-header">${sim.entidad}</th>`).join('')}
                         </tr>
                     </thead>
                     <tbody>
         `;
         
+        // Obtener el año de amortización para mostrar en la etiqueta
+        const anioAmortizacion = simulaciones[0]?.input?.anio_amortizacion || '';
+        const labelInteresesAcum = anioAmortizacion 
+            ? `Intereses hasta Año ${anioAmortizacion}` 
+            : 'Intereses hasta Año Amort.';
+        
         const filas = [
             { label: 'Cuota Mensual', key: 'cuota', isCurrency: true },
-            { label: 'Intereses Banco', key: 'intereses', isCurrency: true },
-            { label: 'Coste Prod. (Total)', key: 'coste_productos_total', isCurrency: true }, 
+            { label: 'Intereses Banco (Total)', key: 'intereses', isCurrency: true },
+            { label: labelInteresesAcum, key: 'intereses_acumulados', isCurrency: true },
+            { label: 'Coste Productos', key: 'coste_productos_vida_total', isCurrency: true }, 
             { label: 'COSTE TOTAL REAL', key: 'total_con_productos', isCurrency: true, isTotal: true },
             { label: 'Desembolso Inicial', key: 'desembolso_inicial', isCurrency: true }
         ];
 
         filas.forEach(fila => {
             const valores = simulaciones.map(s => {
-                if (fila.key === 'coste_productos_total') {
-                    // Calculamos el coste total de productos aquí para mostrarlo en la tabla
-                    // Aunque en app.py ya lo tenemos en total_con_productos - total
-                    // Pero visualmente:
-                    return (s.productos ? s.productos.coste_productos_anual * (s.input.anios || 0) : 0);
+                if (fila.key === 'coste_productos_vida_total') {
+                    return s.productos ? s.productos.coste_productos_vida_total : 0;
                 }
                 return s[fila.key] || 0;
             });
@@ -333,19 +352,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td class="concepto-col" ${fila.isTotal ? 'style="font-weight:bold; color:#2c3e50;"' : ''}>${fila.label}</td>
                 ${simulaciones.map((sim, index) => {
                     let val = sim[fila.key];
-                    if (fila.key === 'coste_productos_total') {
-                        val = (sim.productos ? sim.productos.coste_productos_anual * (sim.input.anios || 0) : 0);
+                    if (fila.key === 'coste_productos_vida_total') {
+                        val = sim.productos ? sim.productos.coste_productos_vida_total : 0;
                     }
                     if (val === undefined) val = 0;
 
-                    const isBest = Math.abs(val - minValor) < 0.1 && fila.key !== 'desembolso_inicial'; 
-                    const formatted = fila.isCurrency ? 
-                        val.toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : 
-                        val;
+                    // Para todos los campos, el mejor es el menor valor (incluyendo desembolso inicial)
+                    const isBest = Math.abs(val - minValor) < 0.1; 
+                    const formatted = fila.isCurrency ? (val || 0).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €' : (val || 0);
                     
                     return `<td class="valor-col ${isBest ? 'mejor-valor-cell' : ''}">
-                        ${formatted}
-                        ${isBest ? '<i class="fas fa-check-circle best-icon"></i>' : ''}
+                        ${formatted} ${isBest ? '<i class="fas fa-check-circle best-icon"></i>' : ''}
                     </td>`;
                 }).join('')}
             </tr>`;
@@ -354,22 +371,13 @@ document.addEventListener('DOMContentLoaded', function() {
         html += `</tbody></table></div>`;
         
         if (recomendacion) {
-            // Usar la recomendación del backend que considera productos
             const mejor = simulaciones.find(s => s.entidad === recomendacion.mejor_intereses.entidad);
-            
-            html += `
-                <div class="comparacion-recomendacion">
-                    <div class="comparacion-valor">
-                        <i class="fas fa-star"></i> Teniendo en cuenta intereses + coste de productos, la mejor opción es <strong>${mejor.entidad}</strong>.
-                    </div>
-                </div>
-            `;
+            html += `<div class="comparacion-recomendacion"><div class="comparacion-valor"><i class="fas fa-star"></i> Opción recomendada por coste real: <strong>${mejor.entidad}</strong>.</div></div>`;
         }
         
         return html;
     }
 
-    // Botón Limpiar
     btnLimpiar.addEventListener('click', function() {
         formulario.reset();
         for (let i = 1; i <= MAX_SIMULACIONES; i++) {
@@ -380,31 +388,19 @@ document.addEventListener('DOMContentLoaded', function() {
         actualizarVisibilidadPaneles();
     });
 
-    // Botón PDF
     if (btnPdf) {
         btnPdf.addEventListener('click', function() {
             const valorInmueble = parseFloat(valorInmuebleInput.value) || 0;
-            if (valorInmueble <= 0) {
-                 alert('Por favor, introduce los datos necesarios antes de generar el PDF.');
-                 return;
-            }
+            if (valorInmueble <= 0) { alert('Introduce los datos primero.'); return; }
             const originalAction = formulario.action;
             const originalTarget = formulario.target;
-            
             formulario.action = '/descargar-pdf';
             formulario.target = '_blank';
             formulario.method = 'POST';
             formulario.submit();
-            
-            setTimeout(() => {
-                formulario.action = originalAction;
-                formulario.target = originalTarget;
-            }, 500);
+            setTimeout(() => { formulario.action = originalAction; formulario.target = originalTarget; }, 500);
         });
     }
 
-    // Inicializar estado
     actualizarVisibilidadPaneles();
-    // Forzar actualización inicial
-    for(let i=1; i<=MAX_SIMULACIONES; i++) calcularBonificaciones(i);
 });

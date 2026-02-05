@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comparador de Hipotecas Avanzado</title>
+    <title>Comparador de Hipotecas Pro</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="container">
-        <h1>Comparador de Hipotecas</h1>
+        <h1>Comparador de Hipotecas Avanzado</h1>
         
         <form id="formulario-hipotecas">
             <div class="general-info-panel">
@@ -40,7 +40,7 @@
                 <div class="gastos-fijos-container">
                     <div class="form-group">
                         <label for="itp">ITP (%):</label>
-                        <input type="number" id="itp" name="itp" value="3" min="0" max="15" step="0.1" required>
+                        <input type="number" id="itp" name="itp" value="3" step="any" required>
                     </div>
                     <div class="form-group">
                         <label for="notaria">Notaría (€):</label>
@@ -71,79 +71,61 @@
                     </div>
                     <div class="form-group">
                         <label for="entrada_porcentaje1">Entrada (%):</label>
-                        <input type="number" id="entrada_porcentaje1" name="entrada_porcentaje1" value="20" min="0" max="100" step="0.1" required>
+                        <input type="number" id="entrada_porcentaje1" name="entrada_porcentaje1" value="20" step="any" required>
                     </div>
                     <div class="form-group">
                         <label for="valor1">A Financiar (€):</label>
                         <input type="number" id="valor1" name="valor1" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="anios1">Años:</label>
-                        <input type="number" id="anios1" name="anios1" value="30" min="1" max="50" required>
+                        <label for="anios1">Años Hipoteca:</label>
+                        <input type="number" id="anios1" name="anios1" value="30" min="0.01" step="any" required>
                     </div>
 
                     <div class="form-group">
                         <label for="tin_partida1">TIN de Partida (Oferta sin bonificar %):</label>
-                        <input type="number" id="tin_partida1" name="tin_partida1" min="0" step="0.01" placeholder="Ej: 3.50">
+                        <input type="number" id="tin_partida1" name="tin_partida1" min="0" step="any" placeholder="Ej: 3.50">
                     </div>
 
                     <button type="button" class="advanced-calc-btn" onclick="toggleProductos('1')">
-                        <span><i class="fas fa-calculator"></i> Productos / Bonificaciones</span>
+                        <span><i class="fas fa-calculator"></i> Configurar Productos y Vinculaciones</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
 
                     <div id="productos-container1" class="productos-container hidden">
-                        <p style="font-size:0.9rem; color:#666; margin-bottom:10px;">Marca y ajusta la bonificación:</p>
-                        
-                        <div class="producto-row">
-                            <label class="producto-check-label">
-                                <input type="checkbox" class="prod-check" data-sim="1" value="Nómina">
-                                Nómina / Ingresos
-                            </label>
-                            <div class="producto-detalles">
-                                <span class="bonif-label">Bonif: -</span>
-                                <input type="number" class="bonif-input" data-sim="1" value="0.50" step="0.01">
-                                <span class="bonif-label">%</span>
-                            </div>
+                        <div class="products-header">
+                            <span>Producto</span>
+                            <span>Bonif. (%)</span>
+                            <span>Coste Anual (€)</span>
+                            <span>Duración (Años)</span>
                         </div>
                         
                         <div class="producto-row">
-                            <label class="producto-check-label">
-                                <input type="checkbox" class="prod-check" data-sim="1" value="Seguro Vida">
-                                Seguro Vida
-                            </label>
-                            <div class="producto-detalles">
-                                <span class="bonif-label">Bonif: -</span>
-                                <input type="number" class="bonif-input" data-sim="1" value="0.25" step="0.01">
-                                <span class="bonif-label">% | </span>
-                                <input type="number" class="coste-input" data-sim="1" placeholder="Coste €" value="200" title="Coste anual estimado">
-                            </div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="1" value="Nómina"> Nómina</label>
+                            <input type="number" class="bonif-input" data-sim="1" value="0.50" step="any">
+                            <input type="number" class="coste-input" data-sim="1" value="0" step="any" disabled style="background:#f0f0f0;">
+                            <input type="number" class="duracion-input" data-sim="1" value="30" min="0.01" step="any" title="Años que mantendrás el producto">
+                        </div>
+                        
+                        <div class="producto-row">
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="1" value="Seguro Vida"> Vida</label>
+                            <input type="number" class="bonif-input" data-sim="1" value="0.25" step="any">
+                            <input type="number" class="coste-input" data-sim="1" value="200" step="any">
+                            <input type="number" class="duracion-input" data-sim="1" value="15" min="0.01" step="any" title="Ej: Solo los primeros años">
                         </div>
 
                         <div class="producto-row">
-                            <label class="producto-check-label">
-                                <input type="checkbox" class="prod-check" data-sim="1" value="Seguro Hogar">
-                                Seguro Hogar
-                            </label>
-                            <div class="producto-detalles">
-                                <span class="bonif-label">Bonif: -</span>
-                                <input type="number" class="bonif-input" data-sim="1" value="0.20" step="0.01">
-                                <span class="bonif-label">% | </span>
-                                <input type="number" class="coste-input" data-sim="1" placeholder="Coste €" value="150">
-                            </div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="1" value="Seguro Hogar"> Hogar</label>
+                            <input type="number" class="bonif-input" data-sim="1" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="1" value="150" step="any">
+                            <input type="number" class="duracion-input" data-sim="1" value="30" min="0.01" step="any">
                         </div>
 
                         <div class="producto-row">
-                            <label class="producto-check-label">
-                                <input type="checkbox" class="prod-check" data-sim="1" value="Alarma">
-                                Alarma
-                            </label>
-                            <div class="producto-detalles">
-                                <span class="bonif-label">Bonif: -</span>
-                                <input type="number" class="bonif-input" data-sim="1" value="0.20" step="0.01">
-                                <span class="bonif-label">% | </span>
-                                <input type="number" class="coste-input" data-sim="1" placeholder="Coste €" value="500">
-                            </div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="1" value="Alarma"> Alarma</label>
+                            <input type="number" class="bonif-input" data-sim="1" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="1" value="500" step="any">
+                            <input type="number" class="duracion-input" data-sim="1" value="3" min="0.01" step="any" title="Ej: Obligatorio 3 años">
                         </div>
 
                         <input type="hidden" name="productos_json1" id="productos_json1">
@@ -152,14 +134,24 @@
                     <div class="form-group tin-final-container">
                         <label for="interes1" style="color:var(--primary-color);">TIN Bonificado (Aplicado):</label>
                         <div style="display:flex; align-items:center;">
-                            <input type="number" id="interes1" name="interes1" class="tin-final-input" readonly step="0.01">
+                            <input type="number" id="interes1" name="interes1" class="tin-final-input" readonly step="any">
                             <span style="font-weight:bold;">%</span>
                         </div>
                     </div>
                     
                     <div class="form-group">
+                        <label for="bonificacion_permanente1" style="font-size:0.95rem;">
+                            <input type="checkbox" id="bonificacion_permanente1" name="bonificacion_permanente1" value="1" checked>
+                            <span style="margin-left:5px;">Bonificación permanente (se mantiene aunque expiren los productos)</span>
+                        </label>
+                        <small style="display:block; margin-top:5px; color:#666; font-style:italic;">
+                            Si no está marcado, el interés volverá al TIN de partida cuando expiren los productos
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
                         <label for="anio_amortizacion1">Año amortización (opcional):</label>
-                        <input type="number" id="anio_amortizacion1" name="anio_amortizacion1" value="10">
+                        <input type="number" id="anio_amortizacion1" name="anio_amortizacion1" value="10" min="0.01" step="any">
                     </div>
                     
                     <div class="resultados" id="resultados1"></div>
@@ -173,129 +165,269 @@
                     </div>
                     <div class="form-group">
                         <label for="entrada_porcentaje2">Entrada (%):</label>
-                        <input type="number" id="entrada_porcentaje2" name="entrada_porcentaje2" value="20" min="0" max="100" step="0.1" required>
+                        <input type="number" id="entrada_porcentaje2" name="entrada_porcentaje2" value="20" step="any" required>
                     </div>
                     <div class="form-group">
                         <label for="valor2">A Financiar (€):</label>
                         <input type="number" id="valor2" name="valor2" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="anios2">Años:</label>
-                        <input type="number" id="anios2" name="anios2" value="30" min="1" max="50" required>
+                        <label for="anios2">Años Hipoteca:</label>
+                        <input type="number" id="anios2" name="anios2" value="30" min="0.01" step="any" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="tin_partida2">TIN de Partida (Oferta %):</label>
-                        <input type="number" id="tin_partida2" name="tin_partida2" min="0" step="0.01" placeholder="Ej: 3.50">
+                        <label for="tin_partida2">TIN de Partida (Oferta sin bonificar %):</label>
+                        <input type="number" id="tin_partida2" name="tin_partida2" min="0" step="any" placeholder="Ej: 3.50">
                     </div>
+
                     <button type="button" class="advanced-calc-btn" onclick="toggleProductos('2')">
-                        <span><i class="fas fa-calculator"></i> Productos / Bonificaciones</span>
+                        <span><i class="fas fa-calculator"></i> Configurar Productos y Vinculaciones</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
+                    
                     <div id="productos-container2" class="productos-container hidden">
+                        <div class="products-header">
+                            <span>Producto</span>
+                            <span>Bonif. (%)</span>
+                            <span>Coste Anual (€)</span>
+                            <span>Duración (Años)</span>
+                        </div>
                         <div class="producto-row">
                             <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="2" value="Nómina"> Nómina</label>
-                            <div class="producto-detalles"><span class="bonif-label">Bonif: -</span><input type="number" class="bonif-input" data-sim="2" value="0.50" step="0.01"><span class="bonif-label">%</span></div>
+                            <input type="number" class="bonif-input" data-sim="2" value="0.50" step="any">
+                            <input type="number" class="coste-input" data-sim="2" value="0" step="any" disabled style="background:#f0f0f0;">
+                            <input type="number" class="duracion-input" data-sim="2" value="30" min="0.01" step="any" title="Años que mantendrás el producto">
                         </div>
                         <div class="producto-row">
-                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="2" value="Seguro Vida"> Seguro Vida</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="2" value="0.25" step="0.01"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="2" value="200"></div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="2" value="Seguro Vida"> Vida</label>
+                            <input type="number" class="bonif-input" data-sim="2" value="0.25" step="any">
+                            <input type="number" class="coste-input" data-sim="2" value="200" step="any">
+                            <input type="number" class="duracion-input" data-sim="2" value="15" min="0.01" step="any" title="Ej: Solo los primeros años">
                         </div>
                         <div class="producto-row">
-                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="2" value="Seguro Hogar"> Seguro Hogar</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="2" value="0.20" step="0.01"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="2" value="150"></div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="2" value="Seguro Hogar"> Hogar</label>
+                            <input type="number" class="bonif-input" data-sim="2" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="2" value="150" step="any">
+                            <input type="number" class="duracion-input" data-sim="2" value="30" min="0.01" step="any">
                         </div>
                         <div class="producto-row">
                             <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="2" value="Alarma"> Alarma</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="2" value="0.20" step="0.01"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="2" value="500"></div>
+                            <input type="number" class="bonif-input" data-sim="2" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="2" value="500" step="any">
+                            <input type="number" class="duracion-input" data-sim="2" value="3" min="0.01" step="any" title="Ej: Obligatorio 3 años">
                         </div>
                         <input type="hidden" name="productos_json2" id="productos_json2">
                     </div>
+
                     <div class="form-group tin-final-container">
-                        <label for="interes2" style="color:var(--primary-color);">TIN Bonificado:</label>
+                        <label for="interes2" style="color:var(--primary-color);">TIN Bonificado (Aplicado):</label>
                         <div style="display:flex; align-items:center;">
-                            <input type="number" id="interes2" name="interes2" class="tin-final-input" readonly step="0.01">
+                            <input type="number" id="interes2" name="interes2" class="tin-final-input" readonly step="any">
                             <span style="font-weight:bold;">%</span>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label for="anio_amortizacion2">Año amortización:</label>
-                        <input type="number" id="anio_amortizacion2" name="anio_amortizacion2" value="10">
+                        <label for="bonificacion_permanente2" style="font-size:0.95rem;">
+                            <input type="checkbox" id="bonificacion_permanente2" name="bonificacion_permanente2" value="1" checked>
+                            <span style="margin-left:5px;">Bonificación permanente (se mantiene aunque expiren los productos)</span>
+                        </label>
+                        <small style="display:block; margin-top:5px; color:#666; font-style:italic;">
+                            Si no está marcado, el interés volverá al TIN de partida cuando expiren los productos
+                        </small>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="anio_amortizacion2">Año amortización (opcional):</label>
+                        <input type="number" id="anio_amortizacion2" name="anio_amortizacion2" value="10" min="0.01" step="any">
+                    </div>
+                    
                     <div class="resultados" id="resultados2"></div>
                 </div>
 
                 <div class="simulacion-panel hidden" id="panel-sim3">
                     <h2>Simulación 3</h2>
-                    <div class="form-group"><label>Entidad:</label><input type="text" id="entidad3" name="entidad3"></div>
-                    <div class="form-group"><label>Entrada (%):</label><input type="number" id="entrada_porcentaje3" name="entrada_porcentaje3" value="20"></div>
-                    <div class="form-group"><label>A Financiar:</label><input type="number" id="valor3" name="valor3" readonly></div>
-                    <div class="form-group"><label>Años:</label><input type="number" id="anios3" name="anios3" value="30"></div>
+                    <div class="form-group">
+                        <label for="entidad3">Entidad bancaria:</label>
+                        <input type="text" id="entidad3" name="entidad3" placeholder="Ej: Banco C" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="entrada_porcentaje3">Entrada (%):</label>
+                        <input type="number" id="entrada_porcentaje3" name="entrada_porcentaje3" value="20" step="any" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="valor3">A Financiar (€):</label>
+                        <input type="number" id="valor3" name="valor3" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="anios3">Años Hipoteca:</label>
+                        <input type="number" id="anios3" name="anios3" value="30" min="0.01" step="any" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tin_partida3">TIN de Partida (Oferta sin bonificar %):</label>
+                        <input type="number" id="tin_partida3" name="tin_partida3" min="0" step="any" placeholder="Ej: 3.50">
+                    </div>
+
+                    <button type="button" class="advanced-calc-btn" onclick="toggleProductos('3')">
+                        <span><i class="fas fa-calculator"></i> Configurar Productos y Vinculaciones</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                     
-                    <div class="form-group"><label>TIN Partida (%):</label><input type="number" id="tin_partida3" name="tin_partida3"></div>
-                    <button type="button" class="advanced-calc-btn" onclick="toggleProductos('3')"><span>Bonificaciones</span><i class="fas fa-chevron-down"></i></button>
                     <div id="productos-container3" class="productos-container hidden">
+                        <div class="products-header">
+                            <span>Producto</span>
+                            <span>Bonif. (%)</span>
+                            <span>Coste Anual (€)</span>
+                            <span>Duración (Años)</span>
+                        </div>
                         <div class="producto-row">
                             <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="3" value="Nómina"> Nómina</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="3" value="0.50"><span class="bonif-label">%</span></div>
+                            <input type="number" class="bonif-input" data-sim="3" value="0.50" step="any">
+                            <input type="number" class="coste-input" data-sim="3" value="0" step="any" disabled style="background:#f0f0f0;">
+                            <input type="number" class="duracion-input" data-sim="3" value="30" min="0.01" step="any" title="Años que mantendrás el producto">
                         </div>
                         <div class="producto-row">
-                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="3" value="Vida"> Vida</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="3" value="0.25"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="3" value="200"></div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="3" value="Seguro Vida"> Vida</label>
+                            <input type="number" class="bonif-input" data-sim="3" value="0.25" step="any">
+                            <input type="number" class="coste-input" data-sim="3" value="200" step="any">
+                            <input type="number" class="duracion-input" data-sim="3" value="15" min="0.01" step="any" title="Ej: Solo los primeros años">
                         </div>
                         <div class="producto-row">
-                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="3" value="Hogar"> Hogar</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="3" value="0.20"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="3" value="150"></div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="3" value="Seguro Hogar"> Hogar</label>
+                            <input type="number" class="bonif-input" data-sim="3" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="3" value="150" step="any">
+                            <input type="number" class="duracion-input" data-sim="3" value="30" min="0.01" step="any">
                         </div>
                         <div class="producto-row">
                             <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="3" value="Alarma"> Alarma</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="3" value="0.20"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="3" value="500"></div>
+                            <input type="number" class="bonif-input" data-sim="3" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="3" value="500" step="any">
+                            <input type="number" class="duracion-input" data-sim="3" value="3" min="0.01" step="any" title="Ej: Obligatorio 3 años">
                         </div>
                         <input type="hidden" name="productos_json3" id="productos_json3">
                     </div>
-                    <div class="form-group tin-final-container"><label>TIN Bonificado:</label><input type="number" id="interes3" name="interes3" class="tin-final-input" readonly></div>
-                    <div class="form-group"><label>Año amortización:</label><input type="number" id="anio_amortizacion3" name="anio_amortizacion3" value="10"></div>
+
+                    <div class="form-group tin-final-container">
+                        <label for="interes3" style="color:var(--primary-color);">TIN Bonificado (Aplicado):</label>
+                        <div style="display:flex; align-items:center;">
+                            <input type="number" id="interes3" name="interes3" class="tin-final-input" readonly step="any">
+                            <span style="font-weight:bold;">%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bonificacion_permanente3" style="font-size:0.95rem;">
+                            <input type="checkbox" id="bonificacion_permanente3" name="bonificacion_permanente3" value="1" checked>
+                            <span style="margin-left:5px;">Bonificación permanente (se mantiene aunque expiren los productos)</span>
+                        </label>
+                        <small style="display:block; margin-top:5px; color:#666; font-style:italic;">
+                            Si no está marcado, el interés volverá al TIN de partida cuando expiren los productos
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="anio_amortizacion3">Año amortización (opcional):</label>
+                        <input type="number" id="anio_amortizacion3" name="anio_amortizacion3" value="10" min="0.01" step="any">
+                    </div>
+                    
                     <div class="resultados" id="resultados3"></div>
                 </div>
 
                 <div class="simulacion-panel hidden" id="panel-sim4">
                     <h2>Simulación 4</h2>
-                    <div class="form-group"><label>Entidad:</label><input type="text" id="entidad4" name="entidad4"></div>
-                    <div class="form-group"><label>Entrada (%):</label><input type="number" id="entrada_porcentaje4" name="entrada_porcentaje4" value="20"></div>
-                    <div class="form-group"><label>A Financiar:</label><input type="number" id="valor4" name="valor4" readonly></div>
-                    <div class="form-group"><label>Años:</label><input type="number" id="anios4" name="anios4" value="30"></div>
+                    <div class="form-group">
+                        <label for="entidad4">Entidad bancaria:</label>
+                        <input type="text" id="entidad4" name="entidad4" placeholder="Ej: Banco D" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="entrada_porcentaje4">Entrada (%):</label>
+                        <input type="number" id="entrada_porcentaje4" name="entrada_porcentaje4" value="20" step="any" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="valor4">A Financiar (€):</label>
+                        <input type="number" id="valor4" name="valor4" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="anios4">Años Hipoteca:</label>
+                        <input type="number" id="anios4" name="anios4" value="30" min="0.01" step="any" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tin_partida4">TIN de Partida (Oferta sin bonificar %):</label>
+                        <input type="number" id="tin_partida4" name="tin_partida4" min="0" step="any" placeholder="Ej: 3.50">
+                    </div>
+
+                    <button type="button" class="advanced-calc-btn" onclick="toggleProductos('4')">
+                        <span><i class="fas fa-calculator"></i> Configurar Productos y Vinculaciones</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
                     
-                    <div class="form-group"><label>TIN Partida (%):</label><input type="number" id="tin_partida4" name="tin_partida4"></div>
-                    <button type="button" class="advanced-calc-btn" onclick="toggleProductos('4')"><span>Bonificaciones</span><i class="fas fa-chevron-down"></i></button>
                     <div id="productos-container4" class="productos-container hidden">
+                        <div class="products-header">
+                            <span>Producto</span>
+                            <span>Bonif. (%)</span>
+                            <span>Coste Anual (€)</span>
+                            <span>Duración (Años)</span>
+                        </div>
                         <div class="producto-row">
                             <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="4" value="Nómina"> Nómina</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="4" value="0.50"><span class="bonif-label">%</span></div>
+                            <input type="number" class="bonif-input" data-sim="4" value="0.50" step="any">
+                            <input type="number" class="coste-input" data-sim="4" value="0" step="any" disabled style="background:#f0f0f0;">
+                            <input type="number" class="duracion-input" data-sim="4" value="30" min="0.01" step="any" title="Años que mantendrás el producto">
                         </div>
                         <div class="producto-row">
-                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="4" value="Vida"> Vida</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="4" value="0.25"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="4" value="200"></div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="4" value="Seguro Vida"> Vida</label>
+                            <input type="number" class="bonif-input" data-sim="4" value="0.25" step="any">
+                            <input type="number" class="coste-input" data-sim="4" value="200" step="any">
+                            <input type="number" class="duracion-input" data-sim="4" value="15" min="0.01" step="any" title="Ej: Solo los primeros años">
                         </div>
                         <div class="producto-row">
-                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="4" value="Hogar"> Hogar</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="4" value="0.20"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="4" value="150"></div>
+                            <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="4" value="Seguro Hogar"> Hogar</label>
+                            <input type="number" class="bonif-input" data-sim="4" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="4" value="150" step="any">
+                            <input type="number" class="duracion-input" data-sim="4" value="30" min="0.01" step="any">
                         </div>
                         <div class="producto-row">
                             <label class="producto-check-label"><input type="checkbox" class="prod-check" data-sim="4" value="Alarma"> Alarma</label>
-                            <div class="producto-detalles"><span class="bonif-label">-</span><input type="number" class="bonif-input" data-sim="4" value="0.20"><span class="bonif-label">% |</span><input type="number" class="coste-input" data-sim="4" value="500"></div>
+                            <input type="number" class="bonif-input" data-sim="4" value="0.20" step="any">
+                            <input type="number" class="coste-input" data-sim="4" value="500" step="any">
+                            <input type="number" class="duracion-input" data-sim="4" value="3" min="0.01" step="any" title="Ej: Obligatorio 3 años">
                         </div>
                         <input type="hidden" name="productos_json4" id="productos_json4">
                     </div>
-                    <div class="form-group tin-final-container"><label>TIN Bonificado:</label><input type="number" id="interes4" name="interes4" class="tin-final-input" readonly></div>
-                    <div class="form-group"><label>Año amortización:</label><input type="number" id="anio_amortizacion4" name="anio_amortizacion4" value="10"></div>
+
+                    <div class="form-group tin-final-container">
+                        <label for="interes4" style="color:var(--primary-color);">TIN Bonificado (Aplicado):</label>
+                        <div style="display:flex; align-items:center;">
+                            <input type="number" id="interes4" name="interes4" class="tin-final-input" readonly step="any">
+                            <span style="font-weight:bold;">%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bonificacion_permanente4" style="font-size:0.95rem;">
+                            <input type="checkbox" id="bonificacion_permanente4" name="bonificacion_permanente4" value="1" checked>
+                            <span style="margin-left:5px;">Bonificación permanente (se mantiene aunque expiren los productos)</span>
+                        </label>
+                        <small style="display:block; margin-top:5px; color:#666; font-style:italic;">
+                            Si no está marcado, el interés volverá al TIN de partida cuando expiren los productos
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="anio_amortizacion4">Año amortización (opcional):</label>
+                        <input type="number" id="anio_amortizacion4" name="anio_amortizacion4" value="10" min="0.01" step="any">
+                    </div>
+                    
                     <div class="resultados" id="resultados4"></div>
                 </div>
             </div>
             
             <div class="buttons-container">
                 <button type="submit" id="btn-calcular">Calcular Comparación</button>
-                <button type="button" id="btn-pdf" class="btn-secondary">Descargar Informe PDF</button>
+                <button type="button" id="btn-pdf" class="btn-secondary">Descargar Informe PDF Detallado</button>
                 <button type="button" id="btn-limpiar">Limpiar</button>
             </div>
         </form>
