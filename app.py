@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, jsonify, make_response
 import io
+import json
 from datetime import datetime
 from pdf_generator import generate_pdf_report
 
@@ -70,7 +71,7 @@ def process_simulation_data(form_data):
         'ahorros': 0,
         'gastos_fijos_detalles': {},
         'gastos_fijos_total': 0,
-        'simulaciones': [], # Lista para guardar N simulaciones
+        'simulaciones': [],
         'num_simulaciones': num_simulaciones
     }
 
@@ -101,13 +102,13 @@ def process_simulation_data(form_data):
     
     # Procesar N simulaciones
     for i in range(1, num_simulaciones + 1):
-        suffix = str(i)
+        suffix = str(i) # IMPORTANTE: Definir suffix primero
         
-        # Obtener datos específicos de esta simulación
+        # 1. Obtener datos básicos del formulario
         entidad = form_data.get(f'entidad{suffix}', '')
         valor = form_data.get(f'valor{suffix}', '')
         anios = form_data.get(f'anios{suffix}', '')
-        interes = form_data.get(f'interes{suffix}', '')
+        interes = form_data.get(f'interes{suffix}', '') # Este es el TIN final calculado por JS
         anio_amortizacion = form_data.get(f'anio_amortizacion{suffix}', '')
         entrada_porcentaje = form_data.get(f'entrada_porcentaje{suffix}', '')
 
@@ -119,14 +120,30 @@ def process_simulation_data(form_data):
             'interes': interes,
             'entrada_porcentaje': entrada_porcentaje
         }
-        
-        # Calcular resultados
+
+        # 2. Obtener datos de productos (JSON)
+        productos_json = form_data.get(f'productos_json{suffix}', '{}')
+        try:
+            productos_data = json.loads(productos_json)
+        except:
+            productos_data = {'coste_productos_anual': 0, 'detalle': []}
+
+        # 3. Calcular cuotas matemáticas
         cuota, total, intereses, acum = calcular_cuotas_simulacion(
             valor, anios, interes, anio_amortizacion
         )
         
         sim_result = None
         if cuota:
+            # Calcular coste total de productos durante la vida de la hipoteca
+            try:
+                anios_float = float(anios)
+            except:
+                anios_float = 0
+                
+            coste_productos_vida = productos_data.get('coste_productos_anual', 0) * anios_float
+            total_con_productos = total + coste_productos_vida
+
             sim_result = {
                 'id': i,
                 'entidad': entidad if entidad else f"Opción {i}",
@@ -135,7 +152,9 @@ def process_simulation_data(form_data):
                 'total': total,
                 'intereses': intereses,
                 'intereses_acumulados': acum,
-                'input': sim_input
+                'input': sim_input,
+                'productos': productos_data,
+                'total_con_productos': round(total_con_productos, 2)
             }
             
             # Calcular entrada valor y ahorros restantes
@@ -154,9 +173,8 @@ def process_simulation_data(form_data):
     # Identificar la mejor opción (solo si hay al menos 2 simulaciones válidas)
     valid_sims = [s for s in data['simulaciones'] if s is not None]
     if len(valid_sims) >= 2:
-        # Encontrar mejor opción por intereses totales
-        mejor_interes = min(valid_sims, key=lambda x: x['intereses'])
-        # Encontrar mejor opción por cuota
+        # Recomendación basada en COSTE TOTAL REAL (Intereses + Productos)
+        mejor_interes = min(valid_sims, key=lambda x: x.get('total_con_productos', x['total']))
         mejor_cuota = min(valid_sims, key=lambda x: x['cuota'])
         
         data['recomendacion'] = {

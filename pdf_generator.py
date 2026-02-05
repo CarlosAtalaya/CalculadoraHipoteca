@@ -104,6 +104,31 @@ def generate_pdf_report(data):
         row("Entrada Inicial", 'entrada_valor')
         row("Desembolso Inicial Total", 'desembolso_inicial')
         row("Ahorros Restantes", 'ahorros_restantes')
+        row("Total Pagado (Hipot.)", 'total')
+
+        # NUEVAS FILAS
+        pdf.ln(2)
+        pdf.set_font('helvetica', 'B', 9)
+        pdf.cell(w_label, 6, "Productos Vinculados", 1)
+        pdf.set_font('helvetica', '', 8)
+        
+        for sim in simulaciones:
+            # Crear lista legible: "Nómina, Alarma, Seguro Vida"
+            prods = sim.get('productos', {}).get('detalle', [])
+            nombres = [p['nombre'] for p in prods]
+            texto = ", ".join(nombres) if nombres else "Ninguno"
+            # Cortar texto si es muy largo
+            if len(texto) > 25: texto = texto[:22] + "..."
+            pdf.cell(w_col, 6, texto, 1, 0, 'C')
+        pdf.ln()
+
+        # Función auxiliar para sacar el coste total
+        def get_coste_total_real(s):
+            return s.get('total_con_productos', 0)
+
+        pdf.set_font('helvetica', 'B', 9)
+        row("COSTE TOTAL REAL", None, is_currency=True, custom_val_func=get_coste_total_real)
+        pdf.set_font('helvetica', '', 9)
 
         pdf.ln(5)
 

@@ -11,6 +11,7 @@
     --light-text: #fff;
     --border-radius: 5px;
     --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --accent-purple: #6c5ce7; /* Color para la calculadora avanzada */
 }
 
 * {
@@ -27,7 +28,7 @@ body {
 }
 
 .container {
-    max-width: 1400px; /* Aumentado para acomodar 4 columnas si es necesario */
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -221,4 +222,103 @@ button {
     padding: 15px;
     border-left: 5px solid var(--success-color);
     border-radius: 4px;
+}
+
+/* --- ESTILOS NUEVOS PARA LA CALCULADORA AVANZADA --- */
+.advanced-calc-btn {
+    background-color: var(--accent-purple);
+    width: 100%;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.advanced-calc-btn:hover {
+    background-color: #5b4cc4;
+}
+
+.productos-container {
+    background-color: #fcfcfc;
+    border: 1px solid #e0e0e0;
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.producto-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.producto-row:last-child {
+    border-bottom: none;
+}
+
+.producto-check-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    flex: 1;
+}
+
+.producto-detalles {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    justify-content: flex-end;
+}
+
+/* NUEVOS ESTILOS PARA INPUTS DE BONIFICACION */
+.bonif-label {
+    font-size: 0.8rem;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.bonif-input {
+    width: 55px !important;
+    padding: 2px 5px !important;
+    font-size: 0.85rem !important;
+    text-align: right;
+    margin-bottom: 0 !important;
+    height: 30px;
+    border: 1px solid #2e7d32 !important;
+    color: #2e7d32;
+    font-weight: bold;
+}
+
+.coste-input {
+    width: 75px !important;
+    padding: 2px 5px !important;
+    font-size: 0.85rem !important;
+    text-align: right;
+    margin-bottom: 0 !important;
+    height: 30px;
+}
+
+.tin-final-container {
+    background-color: #eef2f7;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--secondary-color);
+}
+
+.tin-final-input {
+    background-color: transparent !important;
+    border: none !important;
+    font-weight: bold;
+    font-size: 1.2rem !important;
+    color: var(--primary-color);
+    padding: 0 !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
